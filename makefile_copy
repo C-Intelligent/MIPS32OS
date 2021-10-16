@@ -1,0 +1,68 @@
+drivers_dir	  := kernel/drivers
+boot_dir	  := kernel/boot
+init_dir	  := kernel/init
+lib_dir		  := lib
+fs_dir		  := kernel/fs
+env_dir		  := kernel/env
+mm_dir		  := kernel/mm
+test_dir	  := kernel/test
+
+sysmainc       := kernel/main.c
+
+link_script   := scse.lds
+
+# modules		  := kernel/boot kernel/drivers kernel/fs 
+modules :=
+# objects		  := $(boot_dir)/*.o			  \
+# 				 $(drivers_dir)/*.o	 		  \
+# 				 $(fs_dir)/*.o
+objects := $(test_dir)/*.o
+
+#.PHONY是一个伪目标，可以防止在Makefile中定义的只执行命令的目标和工作
+#目录下的实际文件出现名字冲突，另一种是提交执行makefile时的效率。
+.PHONY: all clean run
+
+# = 等号   := 赋值  ?=  如果没有赋值则赋值
+# @
+#通常makefile会将其执行的命令行在执行前输出到屏幕上。
+#如果将‘@’添加到命令行前，这个命令将不被make回显出来。
+# -
+#通常删除，创建文件如果碰到文件不存在或者已经创建，那么希望忽略掉这个错误，
+# 继续执行，就可以在命令前面添加 -:   -rm dir；
+# $
+# 主要扩展打开makefile中定义的变量
+# $$
+# 主要扩展打开makefile中定义的shell变量
+# make执行时，带入make参数“-n”或“--just-print”，那么其只是显示命令，但不会执行命令，
+# 这个功能很有利于我们调试我们的Makefile
+
+# $@  表示规则中的目标文件集。在模式规则中，如果有多个目标，那么，"$@"就是匹配于目标中模式定义的集合。
+# $%  仅当目标是函数库文件中，表示规则中的目标成员名。例如，如果一个目标是"foo.a(bar.o)"，那么，"$%"就是"bar.o"，"$@"就是"foo.a"。如果目标不是函数库文件（Unix下是[.a]，Windows下是[.lib]），那么，其值为空。
+# $<   依赖目标中的第一个目标名字。如果依赖目标是以模式（即"%"）定义的，那么"$<"将是符合模式的一系列的文件集。注意，其是一个一个取出来的。
+# $?   所有比目标新的依赖目标的集合。以空格分隔。
+# $^   所有的依赖目标的集合。以空格分隔。如果在依赖目标中有多个重复的，那个这个变量会去除重复的依赖目标，只保留一份。
+
+
+all: vmlinux
+
+vmlinux: $(modules)
+	$(LD) $(LDFLAGS) -EL -nostartfiles -N -T -O0 -G0 -o vmlinux.elf $(objects) 
+# $(LD) -EL -nostartfiles -N -T $(link_script) -O0 -G0 -o vmlinux.elf $(objects) 
+	$(OC) --remove-section .MIPS.abiflags --remove-section .reginfo vmlinux.elf
+	$(SZ) vmlinux.elf
+	$(OD) -D -l -t vmlinux.elf > vmlinux.dis
+	$(OD) -D vmlinux.elf > vmlinux.txt
+	$(OC) vmlinux.elf -O srec vmlinux.rec
+
+$(modules): 
+	$(MAKE) --directory=$@
+
+clean: 
+	for d in $(modules);	\
+		do					\
+			$(MAKE) --directory=$$d clean; \
+		done; \
+	rm -rf *.o *~ $(vmlinux_elf)  $(user_disk)
+
+
+include include.mk

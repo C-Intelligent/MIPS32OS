@@ -1,0 +1,1 @@
+“C:\Program Files\Imagination Technologies\Toolchains\mips-mti-elf\2017.10-05\bin\mips-mti-elf-gdb.exe” -x startup.txt

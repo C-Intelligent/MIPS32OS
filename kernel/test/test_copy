@@ -1,0 +1,13 @@
+.text
+LEAF(main)
+loop:
+	li t0, 0
+	li t2, SWITCHES_ADDR 
+	lw t3, 0(t2)
+
+	li t4, LEDS_ADDR
+	sw t3, 0(t4)
+
+	j	loop
+	nop
+END(main)
