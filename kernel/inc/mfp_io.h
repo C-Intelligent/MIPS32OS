@@ -20,3 +20,7 @@
 #define DDR_BASE            0X80000000
 #define BRAM_BASE           0XBFC00000
 
+#define MFP_LEDS                (* ((volatile unsigned *) LEDS_ADDR)      )
+#define MFP_SWITCHES            (* (volatile unsigned *) SWITCHES_ADDR      )
+// #define MFP_BUTTONS             (* (volatile unsigned *) MFP_BUTTONS_ADDR       )
+

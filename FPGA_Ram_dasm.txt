@@ -6,640 +6,338 @@ Disassembly of section .bootrom:
 
 bfc00000 <__reset_vector>:
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:65
-/**************************************************************************************
-    R E S E T   E X C E P T I O N   H A N D L E R
-**************************************************************************************/
-
-LEAF(__reset_vector)
-    la a2,__cpu_init
 bfc00000:	3c06bfc0 	lui	a2,0xbfc0
 bfc00004:	24c60014 	addiu	a2,a2,20
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:66
-    jr a2
 bfc00008:	00c00008 	jr	a2
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:67
-    mtc0    $0, C0_COUNT        # Clear cp0 Count (Used to measure boot time.)
 bfc0000c:	40804800 	mtc0	zero,c0_count
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:68
-    nop
 bfc00010:	00000000 	nop
 
 bfc00014 <__cpu_init>:
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:77
-LEAF(__cpu_init)
-
-    # Verify the code is here due to a reset and not NMI. If this is an NMI then trigger
-    # a debugger breakpoint using a sdbp instruction.
-
-    mfc0    s1, C0_STATUS       # Read CP0 Status
 bfc00014:	40116000 	mfc0	s1,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:78
-    ext     s1, s1, 19, 1       # extract NMI
 bfc00018:	7e3104c0 	ext	s1,s1,0x13,0x1
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:79
-    beqz    s1, init_resources  # Branch if this is NOT an NMI exception.
 bfc0001c:	12200002 	beqz	s1,bfc00028 <init_resources>
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:80
-    nop
 bfc00020:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:81
-    sdbbp                       # Failed assertion: NMI.
 bfc00024:	7000003f 	sdbbp
 
 bfc00028 <init_resources>:
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:87
-
-init_resources:                 # initializes resources for "cpu".
-
-    # Initialize CP0 registers
-
-    la a2,      init_cp0        # Init CP0 Status, Count, Compare, Watch*, and Cause.
 bfc00028:	3c06bfc0 	lui	a2,0xbfc0
 bfc0002c:	24c60288 	addiu	a2,a2,648
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:88
-    jalr a2
 bfc00030:	00c0f809 	jalr	a2
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:89
-    nop
 bfc00034:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:93
-
-    # Initialize the TLB
-
-    la      a2, init_tlb        # Generate unique EntryHi contents per entry pair.
 bfc00038:	3c06bfc0 	lui	a2,0xbfc0
 bfc0003c:	24c60308 	addiu	a2,a2,776
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:94
-    jalr    a2
 bfc00040:	00c0f809 	jalr	a2
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:95
-    nop
 bfc00044:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:101
-
-    #Initialize the Instruction cache
-
-    # la      a2, init_icache     # Initialize the L1 instruction cache. (Executing using I$ on return.)
-    # jalr    a2
-    nop
 bfc00048:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:106
-
-    # The changing of Kernel mode cacheability must be done from KSEG1
-    # Since the code is executing from KSEG0 It needs to do a jump to KSEG1 change K0 and jump back to KSEG0
-
-    la          a2, change_k0_cca
 bfc0004c:	3c06bfc0 	lui	a2,0xbfc0
 bfc00050:	24c60148 	addiu	a2,a2,328
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:107
-    li          a1, 0xf
 bfc00054:	2405000f 	li	a1,15
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:108
-    ins         a2, a1, 29, 1   # changed to KSEG1 address by setting bit 29
 bfc00058:	7ca6ef44 	ins	a2,a1,0x1d,0x1
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:109
-    jalr        a2
 bfc0005c:	00c0f809 	jalr	a2
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:110
-    nop
 bfc00060:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:116
-    
-    # Initialize the Data cache
-
-    # la      a2, init_dcache     # Initialize the L1 data cache
-    # jalr    a2
-    nop
 bfc00064:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:120
-
-    # Prepare for eret to main.
-
-    la      ra, all_done        # If main returns then go to all_done:.
 bfc00068:	3c1fbfc0 	lui	ra,0xbfc0
 bfc0006c:	27ff0088 	addiu	ra,ra,136
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:121
-    move    a0, zero            # Indicate that there are no arguments available.
 bfc00070:	00002025 	move	a0,zero
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:122
-    la      v0, _start            # load the address of the CRT entry point _start.
 bfc00074:	3c028001 	lui	v0,0x8001
-bfc00078:	24420018 	addiu	v0,v0,24
+bfc00078:	24420100 	addiu	v0,v0,256
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:123
-    mtc0    v0, $30             # Write ErrorEPC with the address of main
 bfc0007c:	4082f000 	mtc0	v0,c0_errorepc
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:124
-    ehb                         # clear hazards (makes sure write to ErrorPC has completed)
 bfc00080:	000000c0 	ehb
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:128
-
-    # Return from exception will now execute code in main
-
-    eret                        # Exit reset exception handler and start execution of _start.
 bfc00084:	42000018 	eret
 
 bfc00088 <all_done>:
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:134
-    
-
-/**************************************************************************************/
-all_done:
-    # If main returns it will return to this point.  Just spin here.
-    b       all_done
 bfc00088:	1000ffff 	b	bfc00088 <all_done>
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:135
-    nop
 bfc0008c:	00000000 	nop
 
 bfc00090 <init_icache>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:63
-LEAF(init_icache)
-
-	// Can be skipped if using magic simulation cache flush
-
-	// Determine how big the I$ is
-	mfc0	v0, C0_CONFIG1		// read C0_Config1
 bfc00090:	40028001 	mfc0	v0,c0_config1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:66
-
-	// Isolate I$ Line Size
-	ext	    v1, v0, CFG1_ILSHIFT, 3		// extract IL
 bfc00094:	7c4314c0 	ext	v1,v0,0x13,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:69
-
-	// Skip ahead if No I$
-	beq	    v1, zero, done_icache
 bfc00098:	10600011 	beqz	v1,bfc000e0 <done_icache>
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:70
-	nop
 bfc0009c:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:72
-
-	li	    a2, 2
 bfc000a0:	24060002 	li	a2,2
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:73
-	sllv    v1, a2, v1			// Now have true I$ line size in bytes
 bfc000a4:	00661804 	sllv	v1,a2,v1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:75
-
-	ext	    a0, v0, CFG1_ISSHIFT, 3		// extract IS
 bfc000a8:	7c441580 	ext	a0,v0,0x16,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:76
-	li	    a2, 64
 bfc000ac:	24060040 	li	a2,64
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:77
-	sllv    a0, a2, a0			// I$ Sets per way
 bfc000b0:	00862004 	sllv	a0,a2,a0
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:80
-
-	// Config1IA == I$ Assoc - 1
-	ext	    a1, v0, CFG1_IASHIFT, 3		// extract IA
 bfc000b4:	7c451400 	ext	a1,v0,0x10,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:81
-	add	    a1, 1
 bfc000b8:	20a50001 	addi	a1,a1,1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:83
-
-	mul	    a0, a0, a1			// Total number of sets
 bfc000bc:	70852002 	mul	a0,a0,a1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:85
-
-	lui	    a2, 0x8000			// Get a KSeg0 address for cacheops
 bfc000c0:	3c068000 	lui	a2,0x8000
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:88
-
-	// Clear TagLo/TagHi registers
-	mtc0    zero, C0_TAGLO		// write C0_ITagLo
 bfc000c4:	4080e000 	mtc0	zero,c0_taglo
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:89
-	mtc0    zero, C0_TAGHI		// write C0_ITagHi
 bfc000c8:	4080e800 	mtc0	zero,c0_taghi
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:91
-
-	move    a3, a0
 bfc000cc:	00803825 	move	a3,a0
 
 bfc000d0 <next_icache_tag>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:96
-
-next_icache_tag:
-	// Index Store Tag Cache Op
-	// Will invalidate the tag entry, clear the lock bit, and clear the LRF bit
-	cache   0x8, 0(a2)			// ICIndexStTag
 bfc000d0:	bcc80000 	cache	0x8,0(a2)
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:97
-	add	    a3, -1				// Decrement set counter
 bfc000d4:	20e7ffff 	addi	a3,a3,-1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:98
-	bne     a3, zero, next_icache_tag
 bfc000d8:	14e0fffd 	bnez	a3,bfc000d0 <next_icache_tag>
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:99
-	add     a2, v1				// Get next line address
 bfc000dc:	00c33020 	add	a2,a2,v1
 
 bfc000e0 <done_icache>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:103
-
-done_icache:
-
-    jr      ra
 bfc000e0:	03e00008 	jr	ra
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:104
-    nop
 bfc000e4:	00000000 	nop
 
 bfc000e8 <init_dcache>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:113
-* init_dcache invalidates all data cache entries
-**************************************************************************************/
-
-LEAF(init_dcache)
-
-	mfc0	v0, C0_CONFIG1		// read C0_Config1
 bfc000e8:	40028001 	mfc0	v0,c0_config1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:116
-
-	// Isolate D$ Line Size
-	ext	    v1, v0, CFG1_DLSHIFT, 3		// extract DL
 bfc000ec:	7c431280 	ext	v1,v0,0xa,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:119
-	
-	// Skip ahead if No D$
-	beq	    v1, zero, done_dcache
 bfc000f0:	10600013 	beqz	v1,bfc00140 <done_dcache>
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:120
-	nop
 bfc000f4:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:122
-
-	li	    a2, 2
 bfc000f8:	24060002 	li	a2,2
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:123
-	sllv	v1, a2, v1			// Now have true D$ line size in bytes
 bfc000fc:	00661804 	sllv	v1,a2,v1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:125
-
-	ext	    a0, v0, CFG1_DSSHIFT, 3		// extract DS
 bfc00100:	7c441340 	ext	a0,v0,0xd,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:126
-	li	    a2, 64
 bfc00104:	24060040 	li	a2,64
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:127
-	sllv	a0, a2, a0	// D$ Sets per way
 bfc00108:	00862004 	sllv	a0,a2,a0
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:130
-
-	// Config1DA == D$ Assoc - 1
-	ext	    a1, v0, CFG1_DASHIFT, 3		// extract DA
 bfc0010c:	7c4511c0 	ext	a1,v0,0x7,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:131
-	add	    a1, 1
 bfc00110:	20a50001 	addi	a1,a1,1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:133
-
-	mul	    a0, a0, a1			// Get total number of sets
 bfc00114:	70852002 	mul	a0,a0,a1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:135
-
-	lui	    a2, 0x8000		    // Get a KSeg0 address for cacheops
 bfc00118:	3c068000 	lui	a2,0x8000
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:138
-
-	// Clear TagLo/TagHi registers
-	mtc0	zero, C0_TAGLO		// write C0_TagLo
 bfc0011c:	4080e000 	mtc0	zero,c0_taglo
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:139
-	mtc0	zero, C0_TAGHI		// write C0_TagHi
 bfc00120:	4080e800 	mtc0	zero,c0_taghi
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:140
-	mtc0	zero, C0_TAGLO, 2	// write C0_DTagLo
 bfc00124:	4080e002 	mtc0	zero,c0_taglo1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:141
-	mtc0	zero, C0_TAGHI, 2	// write C0_DTagHi
 bfc00128:	4080e802 	mtc0	zero,c0_taghi1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:143
-
-	move	a3, a0
 bfc0012c:	00803825 	move	a3,a0
 
 bfc00130 <next_dcache_tag>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:149
-
-next_dcache_tag:
-	// Index Store Tag Cache Op
-	// Will invalidate the tag entry, clear the lock bit, and clear the LRF bit
-
-    cache	0x9, 0(a2)			// DCIndexStTag
 bfc00130:	bcc90000 	cache	0x9,0(a2)
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:150
-	add	    a3, -1			    // Decrement set counter
 bfc00134:	20e7ffff 	addi	a3,a3,-1
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:152
-
-	bne	    a3, zero, next_dcache_tag
 bfc00138:	14e0fffd 	bnez	a3,bfc00130 <next_dcache_tag>
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:153
-	add	    a2, v1		    	// Get next line address
 bfc0013c:	00c33020 	add	a2,a2,v1
 
 bfc00140 <done_dcache>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:156
-
-done_dcache:
-    jr      ra
 bfc00140:	03e00008 	jr	ra
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:157
-    nop
 bfc00144:	00000000 	nop
 
 bfc00148 <change_k0_cca>:
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:163
-END(init_dcache)
-
-LEAF(change_k0_cca)
-	// NOTE! This code must be executed in KSEG1 (not KSGE0 uncached)
-    // Set CCA for kseg0 to cacheable
-	mfc0	v0, C0_CONFIG	// read C0_Config
 bfc00148:	40028000 	mfc0	v0,c0_config
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:164
-	li	v1, 3			// CCA for single-core processors
 bfc0014c:	24030003 	li	v1,3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:165
-      ins	v0, v1, 0, 3	// insert K0
 bfc00150:	7c621004 	ins	v0,v1,0x0,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:166
-	mtc0	v0, C0_CONFIG	// write C0_Config
 bfc00154:	40828000 	mtc0	v0,c0_config
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:167
-	jr.hb   ra
 bfc00158:	03e00408 	jr.hb	ra
 D:\OperatingSystem\seu_os\kernel\boot/init_caches.S:168
-    	nop
 bfc0015c:	00000000 	nop
 	...
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:150
-**************************************************************************************/
-/* NOTE: the linker script must insure that this code starts at start + 0x200 so the exception */
-/* vectors will be addressed properly. All .org assume this! */
-/* TLB refill, 32 bit task. */
-.org 0x200                      # TLB refill, 32 bit task.
-    sdbbp                       # This has the effect of starting the debugger
 bfc00200:	7000003f 	sdbbp
 	...
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:154
-    nop
-
-.org 0x280                      # XTLB refill, 64 bit task. start + 0x280
-    sdbbp                       # This has the effect of starting the debugger
 bfc00280:	7000003f 	sdbbp
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:155
-    nop
 bfc00284:	00000000 	nop
 
 bfc00288 <init_cp0>:
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:59
-/**************************************************************************************
-**************************************************************************************/
-LEAF(init_cp0)
-
-    // Initialize Status
-	li	v1, 0x00400404		// (M_StatusERL | M_StatusIPL1 | M_StatusBEV)
 bfc00288:	3c030040 	lui	v1,0x40
 bfc0028c:	34630404 	ori	v1,v1,0x404
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:60
-	mtc0	v1, C0_STATUS		// write C0_Status
 bfc00290:	40836000 	mtc0	v1,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:63
-
-	// Initialize Watch registers if implemented.
-	mfc0	v0, C0_CONFIG1		// read C0_Config1
 bfc00294:	40028001 	mfc0	v0,c0_config1
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:64
-	ext	v1, v0, 3, 1		// extract bit 3 WR (Watch registers implemented)
 bfc00298:	7c4300c0 	ext	v1,v0,0x3,0x1
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:65
-	beq 	v1, zero, done_wr
 bfc0029c:	10600011 	beqz	v1,bfc002e4 <done_wr>
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:66
-	li    	v1, 0x7				// (M_WatchHiI | M_WatchHiR | M_WatchHiW)
 bfc002a0:	24030007 	li	v1,7
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:69
-
-	// Clear all possible Watch Status bits and disable watch exceptions
-	mtc0	v1, C0_WATCHHI		// write C0_WatchHi0
 bfc002a4:	40839800 	mtc0	v1,c0_watchhi
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:70
-	mtc0	zero, C0_WATCHLO	// write C0_WatchLo0
 bfc002a8:	40809000 	mtc0	zero,c0_watchlo
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:72
-
-	mtc0	v1, C0_WATCHHI, 1	// write C0_WatchHi1
 bfc002ac:	40839801 	mtc0	v1,c0_watchhi,1
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:73
-	mtc0	zero, C0_WATCHLO, 1	// write C0_WatchLo1
 bfc002b0:	40809001 	mtc0	zero,c0_watchlo,1
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:75
-
-	mtc0	v1, C0_WATCHHI, 2	// write C0_WatchHi2
 bfc002b4:	40839802 	mtc0	v1,c0_watchhi,2
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:76
-	mtc0	zero, C0_WATCHLO, 2	// write C0_WatchLo2
 bfc002b8:	40809002 	mtc0	zero,c0_watchlo,2
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:78
-
-	mtc0	v1, C0_WATCHHI, 3	// write C0_WatchHi3
 bfc002bc:	40839803 	mtc0	v1,c0_watchhi,3
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:79
-	mtc0	zero, C0_WATCHLO, 3	// write C0_WatchLo3
 bfc002c0:	40809003 	mtc0	zero,c0_watchlo,3
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:81
-
-	mtc0	v1, C0_WATCHHI, 4	// write C0_WatchHi4
 bfc002c4:	40839804 	mtc0	v1,c0_watchhi,4
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:82
-	mtc0	zero, C0_WATCHLO, 4	// write C0_WatchLo4
 bfc002c8:	40809004 	mtc0	zero,c0_watchlo,4
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:84
-
-	mtc0	v1, C0_WATCHHI, 5	// write C0_WatchHi5
 bfc002cc:	40839805 	mtc0	v1,c0_watchhi,5
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:85
-	mtc0	zero, C0_WATCHLO, 5	// write C0_WatchLo5
 bfc002d0:	40809005 	mtc0	zero,c0_watchlo,5
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:87
-
-	mtc0	v1, C0_WATCHHI, 6	// write C0_WatchHi6
 bfc002d4:	40839806 	mtc0	v1,c0_watchhi,6
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:88
-	mtc0	zero, C0_WATCHLO, 6	// write C0_WatchLo6
 bfc002d8:	40809006 	mtc0	zero,c0_watchlo,6
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:90
-
-	mtc0	v1, C0_WATCHHI, 7	// write C0_WatchHi7
 bfc002dc:	40839807 	mtc0	v1,c0_watchhi,7
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:91
-	mtc0	zero, C0_WATCHLO, 7	// write C0_WatchLo7
 bfc002e0:	40809007 	mtc0	zero,c0_watchlo,7
 
 bfc002e4 <done_wr>:
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:96
-
-done_wr:
-
-	// Clear WP bit to avoid watch exception upon user code entry, IV, and software interrupts.
-	mtc0	zero, C0_CAUSE		// write C0_Cause: Init AFTER init of CP0 WatchHi/Lo registers.
 bfc002e4:	40806800 	mtc0	zero,c0_cause
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:99
-
-	// Clear timer interrupt. (Count was cleared at the reset vector to allow timing boot.)
-	mtc0	zero, C0_COMPARE	// write C0_Compare
 bfc002e8:	40805800 	mtc0	zero,c0_compare
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:101
-
-        jr      ra
 bfc002ec:	03e00008 	jr	ra
 D:\OperatingSystem\seu_os\kernel\boot/init_cp0.S:102
-	nop
 bfc002f0:	00000000 	nop
 	...
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:160
-
-#include "init_cp0.S"
-
-.org 0x300                      # Cache error exception. start + 0x300
-    sdbbp                       # This has the effect of starting the debugger
 bfc00300:	7000003f 	sdbbp
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:161
-    nop
 bfc00304:	00000000 	nop
 
 bfc00308 <init_tlb>:
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:60
-**************************************************************************************/
-LEAF(init_tlb)
-
-check_for_tlb:
-	// Determine if we have a TLB
-	mfc0    v1, C0_CONFIG			// read C0_Config
 bfc00308:	40038000 	mfc0	v1,c0_config
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:61
-	ext	    v1, v1, 7, 3			// extract MT field
 bfc0030c:	7c6311c0 	ext	v1,v1,0x7,0x3
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:62
-	li	    a3, 0x1					// load a 1 to check against
 bfc00310:	24070001 	li	a3,1
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:63
-	bne	    v1, a3, done_init_tlb
 bfc00314:	1467000f 	bne	v1,a3,bfc00354 <done_init_tlb>
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:64
-	mfc0    v0, C0_CONFIG1			// C0_Config1
 bfc00318:	40028001 	mfc0	v0,c0_config1
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:65
-	nop
 bfc0031c:	00000000 	nop
 
 bfc00320 <start_init_tlb>:
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:69
-
-start_init_tlb:
-	// Config1MMUSize == Number of TLB entries - 1
-	ext     v1, v0, CFG1_MMUSSHIFT, 6 // extract MMU Size
 bfc00320:	7c432e40 	ext	v1,v0,0x19,0x6
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:70
-	mtc0    zero, C0_ENTRYLO0		// write C0_EntryLo0
 bfc00324:	40801000 	mtc0	zero,c0_entrylo0
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:71
-	mtc0    zero, C0_ENTRYLO1		// write C0_EntryLo1
 bfc00328:	40801800 	mtc0	zero,c0_entrylo1
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:72
-	mtc0    zero, C0_PAGEMASK		// write C0_PageMask
 bfc0032c:	40802800 	mtc0	zero,c0_pagemask
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:73
-	mtc0    zero, C0_WIRED			// write C0_Wired
 bfc00330:	40803000 	mtc0	zero,c0_wired
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:74
-	li	    a0, 0x80000000
 bfc00334:	3c048000 	lui	a0,0x8000
 
 bfc00338 <next_tlb_entry_pair>:
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:77
-
-next_tlb_entry_pair:
-	mtc0    v1, C0_INDEX			// write C0_Index
 bfc00338:	40830000 	mtc0	v1,c0_index
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:78
-	mtc0	a0, C0_ENTRYHI			// write C0_EntryHi
 bfc0033c:	40845000 	mtc0	a0,c0_entryhi
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:79
-	ehb
 bfc00340:	000000c0 	ehb
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:80
-	tlbwi 
 bfc00344:	42000002 	tlbwi
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:81
-	add	    a0, (2<<13)				// Add 8K to the address to avoid TLB conflict with previous entry
 bfc00348:	20844000 	addi	a0,a0,16384
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:83
-
-	bne		v1, zero, next_tlb_entry_pair
 bfc0034c:	1460fffa 	bnez	v1,bfc00338 <next_tlb_entry_pair>
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:84
-	add	    v1, -1
 bfc00350:	2063ffff 	addi	v1,v1,-1
 
 bfc00354 <done_init_tlb>:
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:87
-
-done_init_tlb:
-    jr      ra
 bfc00354:	03e00008 	jr	ra
 D:\OperatingSystem\seu_os\kernel\boot/init_tlb.S:88
-    nop
 bfc00358:	00000000 	nop
 	...
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:168
-#include "init_tlb.S"
-
-
-.org 0x380    /* General exception. */
-    # display alternating one-zeros on board LEDs
-    li      k0, LEDS_ADDR  # Board LEDs display
 bfc00380:	3c1ab060 	lui	k0,0xb060
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:169
-    li      k1, 0x5555          # alternating one-zeros
 bfc00384:	241b5555 	li	k1,21845
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:170
-    sw      k1, 0(k0)           # Write pattern to LEDs
 bfc00388:	af5b0000 	sw	k1,0(k0)
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:171
-    eret
 bfc0038c:	42000018 	eret
 	...
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:178
-
-# If you want the above code to fit into 1k flash you will need to leave out the
-# code below. This is the code that covers the debug exception which you normally will not get.
-
-.org 0x480 /* EJTAG debug exception (EJTAG Control Register[ProbTrap] == 0.) */
-    li      r24_malta_word, LEDS_ADDR     # If post boot then $24 is clobbered.
 bfc00480:	3c18b060 	lui	t8,0xb060
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:179
-    mtc0    a0, C0_DESAVE       # DeSave a0
 bfc00484:	4084f800 	mtc0	a0,c0_desave
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:180
-    mfc0    a0, C0_DEPC         # Read DEPC
 bfc00488:	4004c000 	mfc0	a0,c0_depc
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:181
-    sw      a0, 0(r24_malta_word)    # Display lower 16 bits of DEPC if there is not an EJTAG probe.
 bfc0048c:	af040000 	sw	a0,0(t8)
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:182
-    mfc0    a0, C0_DESAVE       # Restore a0
 bfc00490:	4004f800 	mfc0	a0,c0_desave
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:183
-1:  b       1b  /* Stay here */
 bfc00494:	1000ffff 	b	bfc00494 <done_init_tlb+0x140>
 D:\OperatingSystem\seu_os\kernel\boot/boot.S:184
-    nop
 bfc00498:	00000000 	nop
 	...
 
@@ -647,239 +345,232 @@ Disassembly of section .except_vec3:
 
 80000000 <__tlb_refill>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:23
-# 		.set	push
-# 		#.set	noreorder
-
-__tlb_refill:
-		nop
-		j _mips_general_exception
 80000000:	08000060 	j	80000180 <_mips_general_exception>
 80000004:	00000000 	nop
 	...
 
 80000080 <__xtlb_refill_loop>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:28
-		nop
-		.org 0x80
-__xtlb_refill_loop:
-		nop
-		j _mips_general_exception
 80000080:	08000060 	j	80000180 <_mips_general_exception>
 80000084:	00000000 	nop
 	...
 
 80000100 <__cache_error_loop>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:33
-		nop
-		.org 0x100
-__cache_error_loop:
-		nop
-		j _mips_general_exception
 80000100:	08000060 	j	80000180 <_mips_general_exception>
 80000104:	00000000 	nop
 	...
 
 80000180 <_mips_general_exception>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:45
-		 * which registers really need to be saved.
-		 */
-#  1:	//j	1b
-# 	nop
-
-		sw		sp, kernel_sp 
 80000180:	3c018001 	lui	at,0x8001
 80000184:	ac3d1018 	sw	sp,4120(at)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:46
-		mfc0	k1,CP0_CAUSE
 80000188:	401b6800 	mfc0	k1,c0_cause
 D:\OperatingSystem\seu_os\kernel\boot/start.S:48
-		
-		la	k0, exception_handlers 
 8000018c:	3c1a8001 	lui	k0,0x8001
 80000190:	275a1020 	addiu	k0,k0,4128
 D:\OperatingSystem\seu_os\kernel\boot/start.S:57
-		 * Next lines assumes that the used CPU type has max.
-		 * 32 different types of exceptions. We might use this
-		 * to implement software exceptions in the future.
-		 */
-
-		andi	k1,0x7c #取出中断号
 80000194:	337b007c 	andi	k1,k1,0x7c
 D:\OperatingSystem\seu_os\kernel\boot/start.S:58
-		addu	k0,k1
 80000198:	035bd021 	addu	k0,k0,k1
 D:\OperatingSystem\seu_os\kernel\boot/start.S:59
-		lw	k0,(k0) #把内存中k0地址处的值赋给k0
 8000019c:	8f5a0000 	lw	k0,0(k0)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:61
-		nop
-		jr	k0 #跳到对应中断处理地址
 800001a0:	03400008 	jr	k0
 800001a4:	00000000 	nop
 	...
 
 Disassembly of section .text:
 
-80010000 <main>:
-D:\OperatingSystem\seu_os\kernel\test/main.S:9
+80010000 <lab04_delay>:
+lab04_delay():
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:35
+    val = 1;
+  }
+  return 0;
+}
 
+void lab04_delay() {
+80010000:	27bdfff8 	addiu	sp,sp,-8
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:38
+  volatile unsigned int j;
 
-.globl main
-  
-main:
-   lui   $12, 0xB060    # $12 = address of LEDs
-80010000:	3c0cb060 	lui	t4,0xb060
-D:\OperatingSystem\seu_os\kernel\test/main.S:10
-   lui   $13, 0xB0C0    # $13 = address of switches
-80010004:	3c0db0c0 	lui	t5,0xb0c0
+  for (j = 0; j < 200000; j++) ;	// delay 
+80010004:	afa00000 	sw	zero,0(sp)
+80010008:	8fa20000 	lw	v0,0(sp)
+8001000c:	3c030003 	lui	v1,0x3
+80010010:	24630d40 	addiu	v1,v1,3392
+80010014:	0043102b 	sltu	v0,v0,v1
+80010018:	1040000a 	beqz	v0,80010044 <lab04_delay+0x44>
+8001001c:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:38 (discriminator 3)
+80010020:	3c030003 	lui	v1,0x3
+80010024:	24630d40 	addiu	v1,v1,3392
+80010028:	8fa20000 	lw	v0,0(sp)
+8001002c:	24420001 	addiu	v0,v0,1
+80010030:	afa20000 	sw	v0,0(sp)
+80010034:	8fa20000 	lw	v0,0(sp)
+80010038:	0043102b 	sltu	v0,v0,v1
+8001003c:	1440fffa 	bnez	v0,80010028 <lab04_delay+0x28>
+80010040:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:39
+}
+80010044:	03e00008 	jr	ra
+80010048:	27bd0008 	addiu	sp,sp,8
 
-80010008 <readIO>:
-D:\OperatingSystem\seu_os\kernel\test/main.S:13
+8001004c <main>:
+main():
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:16
+int main() {
+8001004c:	27bdffd8 	addiu	sp,sp,-40
+80010050:	afbf0024 	sw	ra,36(sp)
+80010054:	afb20020 	sw	s2,32(sp)
+80010058:	afb1001c 	sw	s1,28(sp)
+8001005c:	afb00018 	sw	s0,24(sp)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:17
+  volatile unsigned int val = 1;
+80010060:	24020001 	li	v0,1
+80010064:	afa20010 	sw	v0,16(sp)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:20
+    while (val < 0x10000) {
+80010068:	3c110001 	lui	s1,0x1
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:27
+      MFP_LEDS = val;
+8001006c:	3c10b060 	lui	s0,0xb060
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:30
+    val = 1;
+80010070:	1000000b 	b	800100a0 <main+0x54>
+80010074:	24120001 	li	s2,1
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:21
+      MFP_LEDS = val;
+80010078:	8fa20010 	lw	v0,16(sp)
+8001007c:	ae020000 	sw	v0,0(s0)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:22
+      val = val << 1;
+80010080:	8fa20010 	lw	v0,16(sp)
+80010084:	00021040 	sll	v0,v0,0x1
+80010088:	afa20010 	sw	v0,16(sp)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:23
+      lab04_delay();
+8001008c:	0c004000 	jal	80010000 <lab04_delay>
+80010090:	00000000 	nop
+80010094:	10000002 	b	800100a0 <main+0x54>
+80010098:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:30
+    val = 1;
+8001009c:	afb20010 	sw	s2,16(sp)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:20
+    while (val < 0x10000) {
+800100a0:	8fa20010 	lw	v0,16(sp)
+800100a4:	0051102b 	sltu	v0,v0,s1
+800100a8:	1440fff3 	bnez	v0,80010078 <main+0x2c>
+800100ac:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:25
+    while (val > 0) {
+800100b0:	8fa20010 	lw	v0,16(sp)
+800100b4:	1040fff9 	beqz	v0,8001009c <main+0x50>
+800100b8:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:26
+      val = val >> 1;
+800100bc:	8fa20010 	lw	v0,16(sp)
+800100c0:	00021042 	srl	v0,v0,0x1
+800100c4:	afa20010 	sw	v0,16(sp)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:27
+      MFP_LEDS = val;
+800100c8:	8fa20010 	lw	v0,16(sp)
+800100cc:	ae020000 	sw	v0,0(s0)
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:28
+      lab04_delay();
+800100d0:	0c004000 	jal	80010000 <lab04_delay>
+800100d4:	00000000 	nop
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:25
+    while (val > 0) {
+800100d8:	8fa20010 	lw	v0,16(sp)
+800100dc:	1440fff7 	bnez	v0,800100bc <main+0x70>
+800100e0:	00000000 	nop
+800100e4:	1000ffed 	b	8001009c <main+0x50>
+800100e8:	00000000 	nop
 
-readIO: 	
-   lw    $10, 0($13)    # read switches: $10 = switch values
-80010008:	8daa0000 	lw	t2,0(t5)
-D:\OperatingSystem\seu_os\kernel\test/main.S:15
-   sw    $10, 0($12)    # write switch values to LEDs 
-   beq   $0, $0, readIO # repeat
-8001000c:	1000fffe 	b	80010008 <readIO>
-80010010:	ad8a0000 	sw	t2,0(t4)
-D:\OperatingSystem\seu_os\kernel\test/main.S:16
-   nop                  # branch delay slot
-80010014:	00000000 	nop
+800100ec <_mips_handle_exception>:
+_mips_handle_exception():
+D:\OperatingSystem\MIPS32OS\kernel\test/main.c:42
 
-80010018 <_start>:
+void _mips_handle_exception(void* ctx, int reason) {
+  MFP_LEDS = 0x8001;  // Display 0x8001 on LEDs to indicate error state
+800100ec:	34038001 	li	v1,0x8001
+800100f0:	3c02b060 	lui	v0,0xb060
+800100f4:	ac430000 	sw	v1,0(v0)
+800100f8:	1000ffff 	b	800100f8 <_mips_handle_exception+0xc>
+800100fc:	00000000 	nop
+
+80010100 <_start>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:103
-LEAF(_start)
-
-	.set	reorder
-	.set	at
-	/* Disable interrupts */
-	mtc0	zero, CP0_STATUS
-80010018:	40806000 	mtc0	zero,c0_status
+80010100:	40806000 	mtc0	zero,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/start.S:106
-
-        /* Disable watch exception. */
-        mtc0    zero, CP0_WATCHLO
-8001001c:	40809000 	mtc0	zero,c0_watchlo
+80010104:	40809000 	mtc0	zero,c0_watchlo
 D:\OperatingSystem\seu_os\kernel\boot/start.S:107
-        mtc0    zero, CP0_WATCHHI
-80010020:	40809800 	mtc0	zero,c0_watchhi
+80010108:	40809800 	mtc0	zero,c0_watchhi
 D:\OperatingSystem\seu_os\kernel\boot/start.S:112
-
-	
-	/* Zero the BSS */
-	#test code 
-	li v0, 0x80000000
-80010024:	3c028000 	lui	v0,0x8000
+8001010c:	3c028000 	lui	v0,0x8000
 D:\OperatingSystem\seu_os\kernel\boot/start.S:113
-	li v1, 0x08000060
-80010028:	3c030800 	lui	v1,0x800
+80010110:	3c030800 	lui	v1,0x800
 D:\OperatingSystem\seu_os\kernel\boot/start.S:114
-	sw v1, 0(v0)
-8001002c:	34630060 	ori	v1,v1,0x60
-80010030:	ac430000 	sw	v1,0(v0)
+80010114:	34630060 	ori	v1,v1,0x60
+80010118:	ac430000 	sw	v1,0(v0)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:115
-	addi v0, 4
-80010034:	20420004 	addi	v0,v0,4
+8001011c:	20420004 	addi	v0,v0,4
 D:\OperatingSystem\seu_os\kernel\boot/start.S:117
-
-	li v1, 0x00000000
-80010038:	24030000 	li	v1,0
+80010120:	24030000 	li	v1,0
 D:\OperatingSystem\seu_os\kernel\boot/start.S:118
-	sw v1, 0(v0)
-8001003c:	ac430000 	sw	v1,0(v0)
+80010124:	ac430000 	sw	v1,0(v0)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:119
-	addi v0, 4
-80010040:	20420004 	addi	v0,v0,4
+80010128:	20420004 	addi	v0,v0,4
 D:\OperatingSystem\seu_os\kernel\boot/start.S:125
-
-	
-	
-
-
-    la v0, _fbss
-80010044:	3c028001 	lui	v0,0x8001
-80010048:	244210a8 	addiu	v0,v0,4264
+8001012c:	3c028001 	lui	v0,0x8001
+80010130:	244210a8 	addiu	v0,v0,4264
 D:\OperatingSystem\seu_os\kernel\boot/start.S:126
-	la v1, _end
-8001004c:	3c038040 	lui	v1,0x8040
-80010050:	24630000 	addiu	v1,v1,0
+80010134:	3c038040 	lui	v1,0x8040
+80010138:	24630000 	addiu	v1,v1,0
 D:\OperatingSystem\seu_os\kernel\boot/start.S:127
-	beq v0,v1,2f
-80010054:	10430006 	beq	v0,v1,80010070 <_start+0x58>
-80010058:	00000000 	nop
+8001013c:	10430006 	beq	v0,v1,80010158 <_start+0x58>
+80010140:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/start.S:129
-1:
-	addiu v0,v0,4
-8001005c:	24420004 	addiu	v0,v0,4
+80010144:	24420004 	addiu	v0,v0,4
 D:\OperatingSystem\seu_os\kernel\boot/start.S:130
-	nop
-80010060:	00000000 	nop
+80010148:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/start.S:131
-	sw zero,-4(v0)
-80010064:	ac40fffc 	sw	zero,-4(v0)
+8001014c:	ac40fffc 	sw	zero,-4(v0)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:133
-	nop
-	bne v0,v1,1b
-80010068:	1443fffc 	bne	v0,v1,8001005c <_start+0x44>
-8001006c:	00000000 	nop
+80010150:	1443fffc 	bne	v0,v1,80010144 <_start+0x44>
+80010154:	00000000 	nop
 D:\OperatingSystem\seu_os\kernel\boot/start.S:143
-	// and	t0, ~0x7
-	// ori	t0, 0x2
-	// mtc0	t0, CP0_CONFIG
-
-	/* set up stack */
-	li	sp, 0x80400000  #KERNEL的栈顶位置,16K
-80010070:	3c1d8040 	lui	sp,0x8040
+80010158:	3c1d8040 	lui	sp,0x8040
 D:\OperatingSystem\seu_os\kernel\boot/start.S:145
-	
-	li		t0,0x80400000
-80010074:	3c088040 	lui	t0,0x8040
+8001015c:	3c088040 	lui	t0,0x8040
 D:\OperatingSystem\seu_os\kernel\boot/start.S:146
-	sw		t0,mCONTEXT
-80010078:	3c018001 	lui	at,0x8001
-8001007c:	ac28101c 	sw	t0,4124(at)
+80010160:	3c018001 	lui	at,0x8001
+80010164:	ac28101c 	sw	t0,4124(at)
 D:\OperatingSystem\seu_os\kernel\boot/start.S:150
-	
-	// Clear boot interrupt vector bit in Coprocessor 0 Status register
-	// macro: mips32_bicsr (SR_BEV);
-	mfc0	v0,$12
-80010080:	40026000 	mfc0	v0,c0_status
+80010168:	40026000 	mfc0	v0,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/start.S:151
-	ins	v0,zero,0x16,0x1
-80010084:	7c02b584 	ins	v0,zero,0x16,0x1
+8001016c:	7c02b584 	ins	v0,zero,0x16,0x1
 D:\OperatingSystem\seu_os\kernel\boot/start.S:152
-	mtc0	v0,$12
-80010088:	40826000 	mtc0	v0,c0_status
+80010170:	40826000 	mtc0	v0,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/start.S:153
-	ehb
-8001008c:	000000c0 	ehb
+80010174:	000000c0 	ehb
 D:\OperatingSystem\seu_os\kernel\boot/start.S:158
-
-	/* jump to main */
-
-
-	li		k0, 0x00007c01	#UM=0;CP0=0;IE=0,内核态，开中断
-80010090:	241a7c01 	li	k0,31745
+80010178:	241a7c01 	li	k0,31745
 D:\OperatingSystem\seu_os\kernel\boot/start.S:161
-	mtc0	k0,CP0_STATUS
-
-	jal	main
-80010094:	0c004000 	jal	80010000 <main>
-80010098:	409a6000 	mtc0	k0,c0_status
+8001017c:	0c004013 	jal	8001004c <main>
+80010180:	409a6000 	mtc0	k0,c0_status
 D:\OperatingSystem\seu_os\kernel\boot/start.S:162
-	nop
-8001009c:	00000000 	nop
+80010184:	00000000 	nop
 
-800100a0 <loop>:
+80010188 <loop>:
 D:\OperatingSystem\seu_os\kernel\boot/start.S:166
-
-
-loop:
-	j	loop
-800100a0:	08004028 	j	800100a0 <loop>
-800100a4:	00000000 	nop
+80010188:	08004062 	j	80010188 <loop>
+8001018c:	00000000 	nop
 	...
 
 Disassembly of section .MIPS.abiflags:
@@ -915,30 +606,67 @@ Disassembly of section .data:
 Disassembly of section .reginfo:
 
 00000000 <.reginfo>:
-   0:	00003400 	sll	a2,zero,0x10
+   0:	a007000c 	sb	a3,12(zero)
 	...
 
 Disassembly of section .pdr:
 
 00000000 <.pdr>:
-   0:	bfc00000 	cache	0x0,0(s8)
+   0:	80010000 	lb	at,0(zero)
 	...
-  20:	bfc00014 	cache	0x0,20(s8)
+  14:	00000008 	jr	zero
+  18:	0000001d 	0x1d
+  1c:	0000001f 	0x1f
+  20:	8001004c 	lb	at,76(zero)
+  24:	80070000 	lb	a3,0(zero)
+  28:	fffffffc 	sdc3	$31,-4(ra)
 	...
-  40:	bfc00090 	cache	0x0,144(s8)
+  34:	00000028 	0x28
+  38:	0000001d 	0x1d
+  3c:	0000001f 	0x1f
+  40:	800100ec 	lb	at,236(zero)
 	...
-  60:	bfc000e8 	cache	0x0,232(s8)
+  58:	0000001d 	0x1d
+  5c:	0000001f 	0x1f
+  60:	bfc00000 	cache	0x0,0(s8)
 	...
-  80:	bfc00148 	cache	0x0,328(s8)
+  80:	bfc00014 	cache	0x0,20(s8)
 	...
-  a0:	bfc00288 	cache	0x0,648(s8)
+  a0:	bfc00090 	cache	0x0,144(s8)
 	...
-  c0:	bfc00308 	cache	0x0,776(s8)
+  c0:	bfc000e8 	cache	0x0,232(s8)
 	...
-  e0:	80010018 	lb	at,24(zero)
+  e0:	bfc00148 	cache	0x0,328(s8)
 	...
-  f8:	0000001d 	0x1d
-  fc:	0000001f 	0x1f
+ 100:	bfc00288 	cache	0x0,648(s8)
+	...
+ 120:	bfc00308 	cache	0x0,776(s8)
+	...
+ 140:	80010100 	lb	at,256(zero)
+	...
+ 158:	0000001d 	0x1d
+ 15c:	0000001f 	0x1f
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+   0:	3a434347 	xori	v1,s2,0x4347
+   4:	6f432820 	0x6f432820
+   8:	63736564 	0x63736564
+   c:	20657061 	addi	a1,v1,28769
+  10:	20554e47 	addi	s5,v0,20039
+  14:	6c6f6f54 	0x6c6f6f54
+  18:	30322073 	andi	s2,at,0x2073
+  1c:	312e3731 	andi	t6,t1,0x3731
+  20:	35302d30 	ori	s0,t1,0x2d30
+  24:	726f6620 	0x726f6620
+  28:	50494d20 	beql	v0,t1,134ac <__tlb_refill-0x7ffecb54>
+  2c:	544d2053 	bnel	v0,t5,817c <__tlb_refill-0x7fff7e84>
+  30:	61422049 	0x61422049
+  34:	4d206572 	0x4d206572
+  38:	6c617465 	0x6c617465
+  3c:	2e362029 	sltiu	s6,s1,8233
+  40:	00302e33 	tltu	at,s0,0xb8
 
 Disassembly of section .gnu.attributes:
 
@@ -948,181 +676,137 @@ Disassembly of section .gnu.attributes:
    8:	00070100 	sll	zero,a3,0x4
    c:	03040000 	0x3040000
 
-Disassembly of section .debug_line:
-
-00000000 <.debug_line>:
-   0:	00000035 	0x35
-   4:	001d0002 	srl	zero,sp,0x0
-   8:	01010000 	0x1010000
-   c:	000d0efb 	0xd0efb
-  10:	01010101 	0x1010101
-  14:	01000000 	0x1000000
-  18:	00010000 	sll	zero,at,0x0
-  1c:	6e69616d 	0x6e69616d
-  20:	0000532e 	0x532e
-  24:	00000000 	nop
-  28:	00000205 	0x205
-  2c:	4b1a8001 	c2	0x11a8001
-  30:	83134b4d 	lb	s3,19277(t8)
-  34:	01000402 	0x1000402
-  38:	00011c01 	0x11c01
-  3c:	4a000200 	c2	0x200
-  40:	01000000 	0x1000000
-  44:	0d0efb01 	jal	43bec04 <__tlb_refill-0x7bc413fc>
-  48:	01010100 	0x1010100
-  4c:	00000001 	movf	zero,zero,$fcc0
-  50:	01000001 	movf	zero,t0,$fcc0
-  54:	6f6f6200 	0x6f6f6200
-  58:	00532e74 	teq	v0,s3,0xb9
-  5c:	69000000 	0x69000000
-  60:	5f74696e 	0x5f74696e
-  64:	68636163 	0x68636163
-  68:	532e7365 	beql	t9,t6,1ce00 <__tlb_refill-0x7ffe3200>
-  6c:	00000000 	nop
-  70:	74696e69 	jalx	1a5b9a4 <__tlb_refill-0x7e5a465c>
-  74:	3070635f 	andi	s0,v1,0x635f
-  78:	0000532e 	0x532e
-  7c:	6e690000 	0x6e690000
-  80:	745f7469 	jalx	17dd1a4 <__tlb_refill-0x7e822e5c>
-  84:	532e626c 	beql	t9,t6,18a38 <__tlb_refill-0x7ffe75c8>
-  88:	00000000 	nop
-  8c:	02050000 	0x2050000
-  90:	bfc00000 	cache	0x0,0(s8)
-  94:	0100c003 	0x100c003
-  98:	034b4b83 	0x34b4b83
-  9c:	4b4b4a09 	c2	0x14b4a09
-  a0:	83504b4b 	lb	s0,19275(k0)
-  a4:	4b834e4b 	c2	0x1834e4b
-  a8:	4b834f50 	c2	0x1834f50
-  ac:	4e504b4b 	c3	0x504b4b
-  b0:	4b834b83 	c2	0x1834b83
-  b4:	044b504e 	tltiu	v0,20558
-  b8:	7fb80302 	0x7fb80302
-  bc:	4b4d4d4a 	c2	0x14d4d4a
-  c0:	4b4c4b4c 	c2	0x14c4b4c
-  c4:	4c4b4d4b 	0x4c4b4d4b
-  c8:	4c4b4d4c 	0x4c4b4d4c
-  cc:	4b4b4b4f 	c2	0x14b4b4f
-  d0:	09034b4e 	j	40d2d38 <__tlb_refill-0x7bf2d2c8>
-  d4:	4b4d4d4a 	c2	0x14d4d4a
-  d8:	4b4c4b4c 	c2	0x14c4b4c
-  dc:	4c4b4d4b 	0x4c4b4d4b
-  e0:	4b4b4d4c 	c2	0x14b4d4c
-  e4:	4b504c4b 	c2	0x1504c4b
-  e8:	4b4d4b4c 	c2	0x14d4b4c
-  ec:	4b4b4b50 	c2	0x14b4b50
-  f0:	01044b4b 	0x1044b4b
-  f4:	a4026e03 	sh	v0,28163(zero)
-  f8:	024b0101 	0x24b0101
-  fc:	044b157c 	tltiu	v0,5500
- 100:	7fa00303 	0x7fa00303
- 104:	4b4d834a 	c2	0x14d834a
- 108:	4b4d4b4b 	c2	0x14d4b4b
- 10c:	4b4c4b4c 	c2	0x14c4b4c
- 110:	4b4c4b4c 	c2	0x14c4b4c
- 114:	4b4c4b4c 	c2	0x14c4b4c
- 118:	4d4f4b4c 	0x4d4f4b4c
- 11c:	01044b4c 	syscall	0x4112d
- 120:	4bf23a03 	c2	0x1f23a03
- 124:	9b030404 	lwr	v1,1028(t8)
- 128:	4b4b4a7f 	c2	0x14b4a7f
- 12c:	4e4b4b4b 	c3	0x4b4b4b
- 130:	4b4b4b4b 	c2	0x14b4b4b
- 134:	4b4b4d4b 	c2	0x14b4d4b
- 138:	4b4c4b4b 	c2	0x14c4b4b
- 13c:	01044b4d 	break	0x104,0x12d
- 140:	0200d003 	0x200d003
- 144:	4b4b0128 	c2	0x14b0128
- 148:	f0024b4b 	0xf0024b4b
- 14c:	4b4b1801 	c2	0x14b1801
- 150:	4b4b4b4b 	c2	0x14b4b4b
- 154:	01000402 	0x1000402
- 158:	00007e01 	0x7e01
- 15c:	1e000200 	bgtz	s0,960 <__tlb_refill-0x7ffff6a0>
- 160:	01000000 	0x1000000
- 164:	0d0efb01 	jal	43bec04 <__tlb_refill-0x7bc413fc>
- 168:	01010100 	0x1010100
- 16c:	00000001 	movf	zero,zero,$fcc0
- 170:	01000001 	movf	zero,t0,$fcc0
- 174:	61747300 	0x61747300
- 178:	532e7472 	beql	t9,t6,1d344 <__tlb_refill-0x7ffe2cbc>
- 17c:	00000000 	nop
- 180:	02050000 	0x2050000
- 184:	80000000 	lb	zero,0(zero)
- 188:	13011503 	beq	t8,at,5598 <__tlb_refill-0x7fffaa68>
- 18c:	15780283 	bne	t3,t8,b9c <__tlb_refill-0x7ffff464>
- 190:	78028313 	0x78028313
- 194:	03831315 	0x3831315
- 198:	0178020b 	0x178020b
- 19c:	09034c83 	j	40d320c <__tlb_refill-0x7bf2cdf4>
- 1a0:	4b4b4b82 	c2	0x14b4b82
- 1a4:	04028313 	bltzl	zero,fffe0df4 <done_init_tlb+0x403e0aa0>
- 1a8:	00010100 	sll	zero,at,0x4
- 1ac:	00180205 	0x180205
- 1b0:	e6038001 	swc1	$f3,-32767(s0)
- 1b4:	4b4d0100 	c2	0x14d0100
- 1b8:	834b4b4f 	lb	t3,19279(k0)
- 1bc:	504b4b4c 	beql	v0,t3,12ef0 <__tlb_refill-0x7ffed110>
- 1c0:	4b848383 	c2	0x1848383
- 1c4:	03134b4b 	0x3134b4b
- 1c8:	4b4c820a 	c2	0x14c820a
- 1cc:	4b4b4b86 	c2	0x14b4b86
- 1d0:	83144b4f 	lb	s4,19279(t8)
- 1d4:	0402834e 	bltzl	zero,fffe0f10 <done_init_tlb+0x403e0bbc>
- 1d8:	Address 0x00000000000001d8 is out of bounds.
-
-
 Disassembly of section .debug_info:
 
 00000000 <.debug_info>:
-   0:	00000022 	neg	zero,zero
-   4:	00000002 	srl	zero,zero,0x0
+   0:	000000bf 	0xbf
+   4:	00000004 	sllv	zero,zero,zero
    8:	01040000 	0x1040000
-   c:	00000000 	nop
-  10:	80010000 	lb	at,0(zero)
-  14:	80010018 	lb	at,24(zero)
-  18:	00000000 	nop
-  1c:	00000007 	srav	zero,zero,zero
-  20:	0000002d 	0x2d
-  24:	00228001 	0x228001
-  28:	00020000 	sll	zero,v0,0x0
-  2c:	00000014 	0x14
-  30:	00390104 	0x390104
-  34:	00000000 	nop
-  38:	049cbfc0 	0x49cbfc0
-  3c:	003cbfc0 	0x3cbfc0
-  40:	00430000 	0x430000
-  44:	002d0000 	0x2d0000
-  48:	80010000 	lb	at,0(zero)
-  4c:	0000001e 	0x1e
-  50:	00280002 	ror	zero,t0,0x0
-  54:	01040000 	0x1040000
-  58:	00000159 	0x159
-  5c:	00000000 	nop
-  60:	00000069 	0x69
-  64:	00000043 	sra	zero,zero,0x1
-  68:	0000002d 	0x2d
-  6c:	Address 0x000000000000006c is out of bounds.
+   c:	0000000d 	break
+  10:	0000690c 	syscall	0x1a4
+  14:	00009800 	sll	s3,zero,0x0
+  18:	01000000 	0x1000000
+  1c:	00010080 	sll	zero,at,0x2
+  20:	00000000 	nop
+  24:	00810200 	0x810200
+  28:	29010000 	slti	at,t0,0
+  2c:	800100ec 	lb	at,236(zero)
+  30:	00000014 	0x14
+  34:	00559c01 	0x559c01
+  38:	63030000 	0x63030000
+  3c:	01007874 	teq	t0,zero,0x1e1
+  40:	00005529 	0x5529
+  44:	04540100 	0x4540100
+  48:	00000062 	0x62
+  4c:	00572901 	0x572901
+  50:	55010000 	bnel	t0,at,54 <__tlb_refill-0x7fffffac>
+  54:	06040500 	0x6040500
+  58:	6e690504 	0x6e690504
+  5c:	75070074 	jalx	41c01d0 <__tlb_refill-0x7be3fe30>
+  60:	01000000 	0x1000000
+  64:	01000023 	subu	zero,t0,zero
+  68:	00004c80 	sll	t1,zero,0x12
+  6c:	809c0100 	lb	gp,256(a0)
+  70:	08000000 	j	0 <__tlb_refill-0x80000000>
+  74:	2401006a 	li	at,106
+  78:	00000087 	0x87
+  7c:	00789102 	0x789102
+  80:	00070409 	0x70409
+  84:	0a000000 	j	8000000 <__tlb_refill-0x78000000>
+  88:	00000080 	sll	zero,zero,0x2
+  8c:	0000700b 	movn	t6,zero,zero
+  90:	57100100 	bnel	t8,s0,494 <__tlb_refill-0x7ffffb6c>
+  94:	4c000000 	lwxc1	$f0,zero(zero)
+  98:	a0800100 	sb	zero,256(a0)
+  9c:	01000000 	0x1000000
+  a0:	6176089c 	0x6176089c
+  a4:	1101006c 	beq	t0,at,258 <__tlb_refill-0x7ffffda8>
+  a8:	00000087 	0x87
+  ac:	0c689102 	jal	1a24408 <__tlb_refill-0x7e5dbbf8>
+  b0:	80010094 	lb	at,148(zero)
+  b4:	0000005e 	0x5e
+  b8:	0100d80c 	syscall	0x40360
+  bc:	00005e80 	sll	t3,zero,0x1a
+  c0:	22000000 	addi	zero,s0,0
+  c4:	02000000 	0x2000000
+  c8:	0000ba00 	sll	s7,zero,0x8
+  cc:	5d010400 	0x5d010400
+  d0:	00000000 	nop
+  d4:	9cbfc000 	0x9cbfc000
+  d8:	c0bfc004 	ll	ra,-16380(a1)
+  dc:	c7000000 	lwc1	$f0,0(t8)
+  e0:	ed000000 	swc3	$0,0(t0)
+  e4:	01000000 	0x1000000
+  e8:	00001e80 	sll	v1,zero,0x1a
+  ec:	ce000200 	pref	0x0,512(s0)
+  f0:	04000000 	bltz	zero,f4 <__tlb_refill-0x7fffff0c>
+  f4:	00017d01 	0x17d01
+  f8:	00000000 	nop
+  fc:	0000fc00 	sll	ra,zero,0x10
+ 100:	0000c700 	sll	t8,zero,0x1c
+ 104:	0000ed00 	sll	sp,zero,0x14
+ 108:	Address 0x0000000000000108 is out of bounds.
 
 
 Disassembly of section .debug_abbrev:
 
 00000000 <.debug_abbrev>:
-   0:	10001101 	b	4408 <__tlb_refill-0x7fffbbf8>
-   4:	12011106 	beq	s0,at,4420 <__tlb_refill-0x7fffbbe0>
-   8:	1b0e0301 	0x1b0e0301
-   c:	130e250e 	beq	t8,t6,9448 <__tlb_refill-0x7fff6bb8>
-  10:	00000005 	lsa	zero,zero,zero,0x1
-  14:	10001101 	b	441c <__tlb_refill-0x7fffbbe4>
-  18:	12011106 	beq	s0,at,4434 <__tlb_refill-0x7fffbbcc>
-  1c:	1b0e0301 	0x1b0e0301
-  20:	130e250e 	beq	t8,t6,945c <__tlb_refill-0x7fff6ba4>
-  24:	00000005 	lsa	zero,zero,zero,0x1
-  28:	10001101 	b	4430 <__tlb_refill-0x7fffbbd0>
-  2c:	03065506 	0x3065506
-  30:	250e1b0e 	addiu	t6,t0,6926
-  34:	0005130e 	0x5130e
-	...
+   0:	25011101 	addiu	at,t0,4353
+   4:	030b130e 	0x30b130e
+   8:	110e1b0e 	beq	t0,t6,6c44 <__tlb_refill-0x7fff93bc>
+   c:	10061201 	beq	zero,a2,4814 <__tlb_refill-0x7fffb7ec>
+  10:	02000017 	0x2000017
+  14:	193f012e 	0x193f012e
+  18:	0b3a0e03 	j	ce8380c <__tlb_refill-0x7317c7f4>
+  1c:	19270b3b 	0x19270b3b
+  20:	06120111 	bltzall	s0,468 <__tlb_refill-0x7ffffb98>
+  24:	42971840 	c0	0x971840
+  28:	00130119 	0x130119
+  2c:	00050300 	sll	zero,a1,0xc
+  30:	0b3a0803 	j	ce8200c <__tlb_refill-0x7317dff4>
+  34:	13490b3b 	beq	k0,t1,2d24 <__tlb_refill-0x7fffd2dc>
+  38:	00001802 	srl	v1,zero,0x0
+  3c:	03000504 	0x3000504
+  40:	3b0b3a0e 	xori	t3,t8,0x3a0e
+  44:	0213490b 	0x213490b
+  48:	05000018 	bltz	t0,ac <__tlb_refill-0x7fffff54>
+  4c:	0b0b000f 	j	c2c003c <__tlb_refill-0x73d3ffc4>
+  50:	24060000 	li	a2,0
+  54:	3e0b0b00 	0x3e0b0b00
+  58:	0008030b 	0x8030b
+  5c:	012e0700 	0x12e0700
+  60:	0e03193f 	jal	80c64fc <__tlb_refill-0x77f39b04>
+  64:	0b3b0b3a 	j	cec2ce8 <__tlb_refill-0x7313d318>
+  68:	06120111 	bltzall	s0,4b0 <__tlb_refill-0x7ffffb50>
+  6c:	42971840 	c0	0x971840
+  70:	00130119 	0x130119
+  74:	00340800 	0x340800
+  78:	0b3a0803 	j	ce8200c <__tlb_refill-0x7317dff4>
+  7c:	13490b3b 	beq	k0,t1,2d6c <__tlb_refill-0x7fffd294>
+  80:	00001802 	srl	v1,zero,0x0
+  84:	0b002409 	j	c009024 <__tlb_refill-0x73ff6fdc>
+  88:	030b3e0b 	0x30b3e0b
+  8c:	0a00000e 	j	8000038 <__tlb_refill-0x77ffffc8>
+  90:	13490035 	beq	k0,t1,168 <__tlb_refill-0x7ffffe98>
+  94:	2e0b0000 	sltiu	t3,s0,0
+  98:	03193f01 	0x3193f01
+  9c:	3b0b3a0e 	xori	t3,t8,0x3a0e
+  a0:	1113490b 	beq	t0,s3,124d0 <__tlb_refill-0x7ffedb30>
+  a4:	40061201 	0x40061201
+  a8:	19429718 	0x19429718
+  ac:	890c0000 	lwl	t4,0(t0)
+  b0:	11000182 	beqz	t0,6bc <__tlb_refill-0x7ffff944>
+  b4:	00133101 	0x133101
+  b8:	11010000 	beq	t0,at,bc <__tlb_refill-0x7fffff44>
+  bc:	11061000 	beq	t0,a2,40c0 <__tlb_refill-0x7fffbf40>
+  c0:	03011201 	0x3011201
+  c4:	250e1b0e 	addiu	t6,t0,6926
+  c8:	0005130e 	0x5130e
+  cc:	11010000 	beq	t0,at,d0 <__tlb_refill-0x7fffff30>
+  d0:	55061000 	bnel	t0,a2,40d4 <__tlb_refill-0x7fffbf2c>
+  d4:	1b0e0306 	0x1b0e0306
+  d8:	130e250e 	beq	t8,t6,9514 <__tlb_refill-0x7fff6aec>
+  dc:	00000005 	lsa	zero,zero,zero,0x1
 
 Disassembly of section .debug_aranges:
 
@@ -1132,58 +816,251 @@ Disassembly of section .debug_aranges:
    8:	00040000 	sll	zero,a0,0x0
    c:	00000000 	nop
   10:	80010000 	lb	at,0(zero)
-  14:	00000018 	mult	zero,zero
+  14:	00000100 	sll	zero,zero,0x4
 	...
   20:	0000001c 	0x1c
-  24:	00260002 	ror	zero,a2,0x0
+  24:	00c30002 	0xc30002
   28:	00040000 	sll	zero,a0,0x0
   2c:	00000000 	nop
   30:	bfc00000 	cache	0x0,0(s8)
   34:	0000049c 	0x49c
 	...
   40:	00000024 	and	zero,zero,zero
-  44:	004c0002 	0x4c0002
+  44:	00e90002 	0xe90002
   48:	00040000 	sll	zero,a0,0x0
   4c:	00000000 	nop
   50:	80000000 	lb	zero,0(zero)
   54:	000001ac 	0x1ac
-  58:	80010018 	lb	at,24(zero)
+  58:	80010100 	lb	at,256(zero)
   5c:	00000094 	0x94
 	...
+
+Disassembly of section .debug_line:
+
+00000000 <.debug_line>:
+   0:	00000059 	0x59
+   4:	001d0002 	srl	zero,sp,0x0
+   8:	01010000 	0x1010000
+   c:	000d0efb 	0xd0efb
+  10:	01010101 	0x1010101
+  14:	01000000 	0x1000000
+  18:	00010000 	sll	zero,at,0x0
+  1c:	6e69616d 	0x6e69616d
+  20:	0000632e 	0x632e
+  24:	00000000 	nop
+  28:	00000205 	0x205
+  2c:	22038001 	addi	v1,s0,-32767
+  30:	02004d01 	0x2004d01
+  34:	08060304 	j	180c10 <__tlb_refill-0x7fe7f3f0>
+  38:	240206ac 	li	v0,1708
+  3c:	82690313 	lb	t1,787(s3)
+  40:	51853d08 	beql	t4,a1,f464 <__tlb_refill-0x7fff0b9c>
+  44:	8277034d 	lb	s7,845(s3)
+  48:	03f9bb83 	0x3f9bb83
+  4c:	bbf74a76 	swr	s7,19062(ra)
+  50:	037f83bb 	0x37f83bb
+  54:	133c0810 	beq	t9,gp,2098 <__tlb_refill-0x7fffdf68>
+  58:	01001402 	0x1001402
+  5c:	00011c01 	0x11c01
+  60:	4a000200 	c2	0x200
+  64:	01000000 	0x1000000
+  68:	0d0efb01 	jal	43bec04 <__tlb_refill-0x7bc413fc>
+  6c:	01010100 	0x1010100
+  70:	00000001 	movf	zero,zero,$fcc0
+  74:	01000001 	movf	zero,t0,$fcc0
+  78:	6f6f6200 	0x6f6f6200
+  7c:	00532e74 	teq	v0,s3,0xb9
+  80:	69000000 	0x69000000
+  84:	5f74696e 	0x5f74696e
+  88:	68636163 	0x68636163
+  8c:	532e7365 	beql	t9,t6,1ce24 <__tlb_refill-0x7ffe31dc>
+  90:	00000000 	nop
+  94:	74696e69 	jalx	1a5b9a4 <__tlb_refill-0x7e5a465c>
+  98:	3070635f 	andi	s0,v1,0x635f
+  9c:	0000532e 	0x532e
+  a0:	6e690000 	0x6e690000
+  a4:	745f7469 	jalx	17dd1a4 <__tlb_refill-0x7e822e5c>
+  a8:	532e626c 	beql	t9,t6,18a5c <__tlb_refill-0x7ffe75a4>
+  ac:	00000000 	nop
+  b0:	02050000 	0x2050000
+  b4:	bfc00000 	cache	0x0,0(s8)
+  b8:	0100c003 	0x100c003
+  bc:	034b4b83 	0x34b4b83
+  c0:	4b4b4a09 	c2	0x14b4a09
+  c4:	83504b4b 	lb	s0,19275(k0)
+  c8:	4b834e4b 	c2	0x1834e4b
+  cc:	4b834f50 	c2	0x1834f50
+  d0:	4e504b4b 	c3	0x504b4b
+  d4:	4b834b83 	c2	0x1834b83
+  d8:	044b504e 	tltiu	v0,20558
+  dc:	7fb80302 	0x7fb80302
+  e0:	4b4d4d4a 	c2	0x14d4d4a
+  e4:	4b4c4b4c 	c2	0x14c4b4c
+  e8:	4c4b4d4b 	0x4c4b4d4b
+  ec:	4c4b4d4c 	0x4c4b4d4c
+  f0:	4b4b4b4f 	c2	0x14b4b4f
+  f4:	09034b4e 	j	40d2d38 <__tlb_refill-0x7bf2d2c8>
+  f8:	4b4d4d4a 	c2	0x14d4d4a
+  fc:	4b4c4b4c 	c2	0x14c4b4c
+ 100:	4c4b4d4b 	0x4c4b4d4b
+ 104:	4b4b4d4c 	c2	0x14b4d4c
+ 108:	4b504c4b 	c2	0x1504c4b
+ 10c:	4b4d4b4c 	c2	0x14d4b4c
+ 110:	4b4b4b50 	c2	0x14b4b50
+ 114:	01044b4b 	0x1044b4b
+ 118:	a4026e03 	sh	v0,28163(zero)
+ 11c:	024b0101 	0x24b0101
+ 120:	044b157c 	tltiu	v0,5500
+ 124:	7fa00303 	0x7fa00303
+ 128:	4b4d834a 	c2	0x14d834a
+ 12c:	4b4d4b4b 	c2	0x14d4b4b
+ 130:	4b4c4b4c 	c2	0x14c4b4c
+ 134:	4b4c4b4c 	c2	0x14c4b4c
+ 138:	4b4c4b4c 	c2	0x14c4b4c
+ 13c:	4d4f4b4c 	0x4d4f4b4c
+ 140:	01044b4c 	syscall	0x4112d
+ 144:	4bf23a03 	c2	0x1f23a03
+ 148:	9b030404 	lwr	v1,1028(t8)
+ 14c:	4b4b4a7f 	c2	0x14b4a7f
+ 150:	4e4b4b4b 	c3	0x4b4b4b
+ 154:	4b4b4b4b 	c2	0x14b4b4b
+ 158:	4b4b4d4b 	c2	0x14b4d4b
+ 15c:	4b4c4b4b 	c2	0x14c4b4b
+ 160:	01044b4d 	break	0x104,0x12d
+ 164:	0200d003 	0x200d003
+ 168:	4b4b0128 	c2	0x14b0128
+ 16c:	f0024b4b 	0xf0024b4b
+ 170:	4b4b1801 	c2	0x14b1801
+ 174:	4b4b4b4b 	c2	0x14b4b4b
+ 178:	01000402 	0x1000402
+ 17c:	00007e01 	0x7e01
+ 180:	1e000200 	bgtz	s0,984 <__tlb_refill-0x7ffff67c>
+ 184:	01000000 	0x1000000
+ 188:	0d0efb01 	jal	43bec04 <__tlb_refill-0x7bc413fc>
+ 18c:	01010100 	0x1010100
+ 190:	00000001 	movf	zero,zero,$fcc0
+ 194:	01000001 	movf	zero,t0,$fcc0
+ 198:	61747300 	0x61747300
+ 19c:	532e7472 	beql	t9,t6,1d368 <__tlb_refill-0x7ffe2c98>
+ 1a0:	00000000 	nop
+ 1a4:	02050000 	0x2050000
+ 1a8:	80000000 	lb	zero,0(zero)
+ 1ac:	13011503 	beq	t8,at,55bc <__tlb_refill-0x7fffaa44>
+ 1b0:	15780283 	bne	t3,t8,bc0 <__tlb_refill-0x7ffff440>
+ 1b4:	78028313 	0x78028313
+ 1b8:	03831315 	0x3831315
+ 1bc:	0178020b 	0x178020b
+ 1c0:	09034c83 	j	40d320c <__tlb_refill-0x7bf2cdf4>
+ 1c4:	4b4b4b82 	c2	0x14b4b82
+ 1c8:	04028313 	bltzl	zero,fffe0e18 <done_init_tlb+0x403e0ac4>
+ 1cc:	00010100 	sll	zero,at,0x4
+ 1d0:	01000205 	0x1000205
+ 1d4:	e6038001 	swc1	$f3,-32767(s0)
+ 1d8:	4b4d0100 	c2	0x14d0100
+ 1dc:	834b4b4f 	lb	t3,19279(k0)
+ 1e0:	504b4b4c 	beql	v0,t3,12f14 <__tlb_refill-0x7ffed0ec>
+ 1e4:	4b848383 	c2	0x1848383
+ 1e8:	03134b4b 	0x3134b4b
+ 1ec:	4b4c820a 	c2	0x14c820a
+ 1f0:	4b4b4b86 	c2	0x14b4b86
+ 1f4:	83144b4f 	lb	s4,19279(t8)
+ 1f8:	0402834e 	bltzl	zero,fffe0f34 <done_init_tlb+0x403e0be0>
+ 1fc:	Address 0x00000000000001fc is out of bounds.
+
 
 Disassembly of section .debug_str:
 
 00000000 <.debug_str>:
-   0:	6e69616d 	0x6e69616d
-   4:	4400532e 	0x4400532e
-   8:	704f5c3a 	0x704f5c3a
-   c:	74617265 	jalx	185c994 <__tlb_refill-0x7e7a366c>
-  10:	53676e69 	beql	k1,a3,1b9b8 <__tlb_refill-0x7ffe4648>
-  14:	65747379 	0x65747379
-  18:	65735c6d 	0x65735c6d
-  1c:	736f5f75 	0x736f5f75
-  20:	72656b5c 	udi12	s3,a1,t5,0xd
-  24:	5c6c656e 	0x5c6c656e
-  28:	74736574 	jalx	1cd95d0 <__tlb_refill-0x7e326a30>
-  2c:	554e4700 	bnel	t2,t6,11c30 <__tlb_refill-0x7ffee3d0>
-  30:	20534120 	addi	s3,v0,16672
-  34:	38322e32 	xori	s2,at,0x2e32
-  38:	0031352e 	0x31352e
-  3c:	746f6f62 	jalx	1bdbd88 <__tlb_refill-0x7e424278>
-  40:	4400532e 	0x4400532e
-  44:	704f5c3a 	0x704f5c3a
-  48:	74617265 	jalx	185c994 <__tlb_refill-0x7e7a366c>
-  4c:	53676e69 	beql	k1,a3,1b9f4 <__tlb_refill-0x7ffe460c>
-  50:	65747379 	0x65747379
-  54:	65735c6d 	0x65735c6d
-  58:	736f5f75 	0x736f5f75
-  5c:	72656b5c 	udi12	s3,a1,t5,0xd
-  60:	5c6c656e 	0x5c6c656e
-  64:	746f6f62 	jalx	1bdbd88 <__tlb_refill-0x7e424278>
-  68:	61747300 	0x61747300
-  6c:	532e7472 	beql	t9,t6,1d238 <__tlb_refill-0x7ffe2dc8>
-  70:	Address 0x0000000000000070 is out of bounds.
+   0:	69736e75 	0x69736e75
+   4:	64656e67 	0x64656e67
+   8:	746e6920 	jalx	1b9a480 <__tlb_refill-0x7e465b80>
+   c:	554e4700 	bnel	t2,t6,11c10 <__tlb_refill-0x7ffee3f0>
+  10:	31314320 	andi	s1,t1,0x4320
+  14:	332e3620 	andi	t6,t9,0x3620
+  18:	2d20302e 	sltiu	zero,t1,12334
+  1c:	206c656d 	addi	t4,v1,25965
+  20:	6f736d2d 	0x6f736d2d
+  24:	662d7466 	0x662d7466
+  28:	74616f6c 	jalx	185bdb0 <__tlb_refill-0x7e7a4250>
+  2c:	616d2d20 	0x616d2d20
+  30:	3d686372 	0x3d686372
+  34:	6b34316d 	0x6b34316d
+  38:	6d2d2063 	0x6d2d2063
+  3c:	20746c70 	addi	s4,v1,27760
+  40:	70696d2d 	0x70696d2d
+  44:	72323373 	0x72323373
+  48:	6d2d2032 	0x6d2d2032
+  4c:	636e7973 	0x636e7973
+  50:	6d2d2069 	0x6d2d2069
+  54:	3d696261 	0x3d696261
+  58:	2d203233 	sltiu	zero,t1,12851
+  5c:	4f2d2067 	c3	0x12d2067
+  60:	65720031 	0x65720031
+  64:	6e6f7361 	0x6e6f7361
+  68:	69616d00 	0x69616d00
+  6c:	00632e6e 	0x632e6e
+  70:	6e69616d 	0x6e69616d
+  74:	62616c00 	0x62616c00
+  78:	645f3430 	0x645f3430
+  7c:	79616c65 	st.h	$w17,706(t5)
+  80:	696d5f00 	0x696d5f00
+  84:	685f7370 	0x685f7370
+  88:	6c646e61 	0x6c646e61
+  8c:	78655f65 	st.h	$w29,202(t3)
+  90:	74706563 	jalx	1c1958c <__tlb_refill-0x7e3e6a74>
+  94:	006e6f69 	0x6e6f69
+  98:	4f5c3a44 	c3	0x15c3a44
+  9c:	61726570 	0x61726570
+  a0:	676e6974 	0x676e6974
+  a4:	74737953 	jalx	1cde54c <__tlb_refill-0x7e321ab4>
+  a8:	4d5c6d65 	0x4d5c6d65
+  ac:	33535049 	andi	s3,k0,0x5049
+  b0:	5c534f32 	0x5c534f32
+  b4:	6e72656b 	0x6e72656b
+  b8:	745c6c65 	jalx	171b194 <__tlb_refill-0x7e8e4e6c>
+  bc:	00747365 	0x747365
+  c0:	746f6f62 	jalx	1bdbd88 <__tlb_refill-0x7e424278>
+  c4:	4400532e 	0x4400532e
+  c8:	704f5c3a 	0x704f5c3a
+  cc:	74617265 	jalx	185c994 <__tlb_refill-0x7e7a366c>
+  d0:	53676e69 	beql	k1,a3,1ba78 <__tlb_refill-0x7ffe4588>
+  d4:	65747379 	0x65747379
+  d8:	65735c6d 	0x65735c6d
+  dc:	736f5f75 	0x736f5f75
+  e0:	72656b5c 	udi12	s3,a1,t5,0xd
+  e4:	5c6c656e 	0x5c6c656e
+  e8:	746f6f62 	jalx	1bdbd88 <__tlb_refill-0x7e424278>
+  ec:	554e4700 	bnel	t2,t6,11cf0 <__tlb_refill-0x7ffee310>
+  f0:	20534120 	addi	s3,v0,16672
+  f4:	38322e32 	xori	s2,at,0x2e32
+  f8:	0031352e 	0x31352e
+  fc:	72617473 	0x72617473
+ 100:	00532e74 	teq	v0,s3,0xb9
 
+Disassembly of section .debug_frame:
+
+00000000 <.debug_frame>:
+   0:	0000000c 	syscall
+   4:	ffffffff 	sdc3	$31,-1(ra)
+   8:	7c010001 	0x7c010001
+   c:	001d0d1f 	0x1d0d1f
+  10:	00000014 	0x14
+  14:	00000000 	nop
+  18:	80010000 	lb	at,0(zero)
+  1c:	0000004c 	syscall	0x1
+  20:	02080e44 	0x2080e44
+  24:	00000e48 	0xe48
+  28:	00000018 	mult	zero,zero
+  2c:	00000000 	nop
+  30:	8001004c 	lb	at,76(zero)
+  34:	000000a0 	0xa0
+  38:	50280e44 	beql	at,t0,394c <__tlb_refill-0x7fffc6b4>
+  3c:	0292019f 	0x292019f
+  40:	04900391 	bltzal	a0,e88 <__tlb_refill-0x7ffff178>
+  44:	0000000c 	syscall
+  48:	00000000 	nop
+  4c:	800100ec 	lb	at,236(zero)
+  50:	00000014 	0x14
 
 Disassembly of section .debug_ranges:
 
@@ -1192,6 +1069,6 @@ Disassembly of section .debug_ranges:
    4:	00000000 	nop
    8:	80000000 	lb	zero,0(zero)
    c:	800001ac 	lb	zero,428(zero)
-  10:	80010018 	lb	at,24(zero)
-  14:	800100ac 	lb	at,172(zero)
+  10:	80010100 	lb	at,256(zero)
+  14:	80010194 	lb	at,404(zero)
 	...

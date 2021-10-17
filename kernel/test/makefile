@@ -4,7 +4,7 @@ INCLUDES	  := -I../inc/
 
 # ======== End of configuration ===
 
-%.o: %.S
+%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< 
 
 .PHONY: clean
