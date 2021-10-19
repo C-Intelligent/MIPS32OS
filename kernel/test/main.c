@@ -1,41 +1,61 @@
-/**********************************************************
- * volatile  提醒编译器它后面所定义的变量随时都有可能改变，因此
- * 编译后的程序每次需要存储或读取这个变量的时候，都会直接从变量
- * 地址中读取数据。如果没有volatile关键字，则编译器可能优化读取
- * 和存储，可能暂时使用寄存器中的值，如果这个变量由别的程序更新
- * 了的话，将出现不一致的现象。
- **********************************************************/
+/*
+ * main.c for the MIPSfpga system running on Nexys4 DDR FPGA board.
+ *
+ * Lab 5: SwTo7segDec
+ * This program displays the value of the switches in decimal on the 
+ * 7-segment displays.
+ */
+
 
 #include "../inc/mfp_io.h"
+#include "../inc/printf.h"
+// #include "../libfdc/fdc.h"
 
-void lab04_delay();
+#define MAXNUMDIGITS 5   // With 16 switches, maximum decimal value is 2^16 - 1 = 65535
+
+void writeValTo7Segs(unsigned int val);
 
 //------------------
 // main()
 //------------------
 int main() {
-  volatile unsigned int val = 1;
+    printf("Hello Operating System!\n");
+    printf("Hello Operating System!\n");
+    printf("Hello Operating System!\n");
+  volatile unsigned int switches;
+
+//   fdc_init();
+//   fdc_printf("Starting program.");
 
   while (1) {  
-    while (val < 0x10000) {
-      MFP_LEDS = val;
-      val = val << 1;
-      lab04_delay();
-    }
-    while (val > 0) {
-      val = val >> 1;
-      MFP_LEDS = val;
-      lab04_delay();
-    }
-    val = 1;
+    switches = MFP_SWITCHES;
+    MFP_LEDS = switches;
+    MFP_7SEGEN = 0xf0;
+    MFP_7SEGDIGITS = switches;
+
+    // writeValTo7Segs(switches);
   }
   return 0;
 }
 
-void lab04_delay() {
-  volatile unsigned int j;
+void writeValTo7Segs(unsigned int val) {
 
-  for (j = 0; j < 200000; j++) ;	// delay 
+  volatile int digit, i=0;
+  volatile unsigned int allDigits=0, enDigits;
+
+//   fdc_printf("val = %d.\n", val);
+  
+  for (i=0; ((val>0) && (i<MAXNUMDIGITS)); i++) {
+    digit = val % 10;
+	allDigits |= (digit<<(i*4));
+    val = val / 10;
+    enDigits |= 1 << i;
+  }
+
+  MFP_7SEGDIGITS = allDigits; // write value to 7-segment display
+  MFP_7SEGEN = ~enDigits;     // enable subset of 7-segment displays
+  
+  return;
 }
 
 void _mips_handle_exception(void* ctx, int reason) {

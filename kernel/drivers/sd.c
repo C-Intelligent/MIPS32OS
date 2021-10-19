@@ -40,9 +40,9 @@ void spi_init() {
 
 void spi_disable() {
     // power off SD
-  //printf("\n\r****Pull Out SD Card Now!****\n\r", 0);
+  printf("\n\r****Pull Out SD Card Now!****\n\r", 0);
   for (uint32_t delay_i = 0; delay_i < 15; delay_i++) {
-    //printf("=", 0);
+    printf("=", 0);
     for (uint32_t delay_j = 0; delay_j < 300; delay_j++) {
       //printf(". ", 0);
       for (uint32_t delay_k = 0; delay_k < 1000; delay_k++) {

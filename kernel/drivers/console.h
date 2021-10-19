@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types.h>
+#include "../inc/types.h"
 
 void cons_init(void);
 int cons_getc(void);

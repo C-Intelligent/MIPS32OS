@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: main.o 
+all: kalloc.o 
 
 # main.S: main.c
 # 	$(CC) $^ -o $@

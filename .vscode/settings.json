@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.html": "html",
+        "types.h": "c",
+        "spinlock.h": "c",
+        "mmu.h": "c",
+        "memlayout.h": "c"
+    }
+}

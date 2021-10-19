@@ -22,6 +22,7 @@ typedef unsigned int    u_int;
 typedef unsigned short  u_short;
 typedef unsigned char   u_char;
 typedef unsigned long long 		u_ll;
+typedef u_int pde_t;
 
 // Pointers and addresses are 32 bits long.
 // We use pointer types to represent virtual addresses,
@@ -74,3 +75,24 @@ typedef uint32_t size_t;
 #ifndef offsetof
 #define offsetof(type, member)  ((size_t) (&((type*)0)->member))
 #endif
+
+
+// Mutual exclusion lock.
+struct spinlock {
+  u_int locked;       // Is the lock held?
+  
+  // For debugging:
+  char *name;        // Name of lock.
+  struct cpu *cpu;   // The cpu holding the lock.
+  u_int pcs[10];      // The call stack (an array of program counters)
+                     // that locked the lock.
+};
+
+struct buf;
+struct context;
+struct file;
+struct inode;
+struct pipe;
+struct proc;
+struct stat;
+struct superblock;

@@ -23,4 +23,7 @@
 #define MFP_LEDS                (* ((volatile unsigned *) LEDS_ADDR)      )
 #define MFP_SWITCHES            (* (volatile unsigned *) SWITCHES_ADDR      )
 // #define MFP_BUTTONS             (* (volatile unsigned *) MFP_BUTTONS_ADDR       )
+#define MFP_7SEGEN              (* (volatile unsigned *) SEVEN_SEG_EN_ADDR        )
+#define MFP_7SEGDIGITS          (* (volatile unsigned *) SEVEN_SEG_ADDR    )
+
 

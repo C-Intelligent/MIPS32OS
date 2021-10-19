@@ -2,8 +2,6 @@
 
 #include "uart.h"
 
-#include "vga_print.h"
-
 static void cons_intr(int (*proc)(void));
 static void cons_putc(int c);
 
@@ -80,13 +78,11 @@ static void cons_putc(int c) {
 		serial_putc('\r');
 	} else
 		serial_putc(c);
-	vga_print_char((char)c);
 }
 
 // initialize the console devices
 void cons_init(void) {
 	serial_init();
-	vga_print_init();
 }
 
 // `High'-level console I/O.  Used by readline and cprintf.
