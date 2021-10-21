@@ -33,11 +33,8 @@ acquire(struct spinlock *lk)
   // reordered before it. 
 
   
-  while(_mips_atomic_xchg(&lk->locked, 1) != 0)
-    ;
+  while(_mips_atomic_xchg(&lk->locked, 1) != 0);
   
-  
-
   // Record info about lock acquisition for debugging.
   // lk->cpu = cpu;
   // getcallerpcs(&lk, lk->pcs);

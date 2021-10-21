@@ -8,6 +8,19 @@
 #define NULL ((void*) 0)
 #endif
 
+
+#define NPROC        64  // maximum number of processes
+#define KSTACKSIZE 4096  // size of per-process kernel stack
+#define NCPU          8  // maximum number of CPUs
+#define NOFILE       16  // open files per process
+#define NFILE       100  // open files per system
+#define NBUF         10  // size of disk block cache
+#define NINODE       50  // maximum number of active i-nodes
+#define NDEV         10  // maximum major device number
+#define ROOTDEV       1  // device number of file system root disk
+#define MAXARG       32  // max exec arguments
+#define LOGSIZE      10  // max data sectors in on-disk log
+
 // Explicitly-sized versions of integer types
 typedef int8_t  s8;
 typedef int16_t s16;
@@ -23,6 +36,7 @@ typedef unsigned short  u_short;
 typedef unsigned char   u_char;
 typedef unsigned long long 		u_ll;
 typedef u_int pde_t;
+typedef u_int pte_t;
 
 // Pointers and addresses are 32 bits long.
 // We use pointer types to represent virtual addresses,
@@ -93,6 +107,41 @@ struct context;
 struct file;
 struct inode;
 struct pipe;
-struct proc;
-struct stat;
-struct superblock;
+
+// 上下文
+struct context {
+  u_int edi;
+  u_int esi;
+  u_int ebx;
+  u_int ebp;
+  u_int eip;
+};
+
+// 未使用态、初始态、等待态、就绪态、运行态、僵尸态
+enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+// Per-process state
+struct proc {
+  u_int sz;                     // Size of process memory (bytes)
+  pde_t* pgdir;                // Page table
+  char *kstack;                // Bottom of kernel stack for this process
+  enum procstate state;        // Process state
+  volatile int pid;            // Process ID
+  struct proc *parent;         // Parent process
+  struct trapframe *tf;        // Trap frame for current syscall
+  struct context *context;     // swtch() here to run process
+  void *chan;                  // If non-zero, sleeping on chan
+  int killed;                  // If non-zero, have been killed
+  struct file *ofile[NOFILE];  // Open files
+  struct inode *cwd;           // Current directory
+  char name[16];               // Process name (debugging)
+};
+
+struct _m_stat {
+	int v;
+};
+
+struct superblock {
+	int v;
+};
+
+

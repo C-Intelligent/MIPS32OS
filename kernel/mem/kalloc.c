@@ -5,7 +5,6 @@
 #include "../inc/mmu.h"
 
 void freerange(void *vstart, void *vend);
-extern char end[]; // first address after kernel loaded from ELF file
 
 struct run {
   struct run *next;
@@ -14,17 +13,17 @@ struct run {
 struct {
   struct spinlock lock;
   int use_lock;
-  struct run *freelist;
+  struct run *freelist;  //存储线性映射地址(无需经过tlb 仅内核态可访问)
 } kmem;
 
 
 void
-phys_page_allocator_init(void *vstart, void *vend)
+phys_page_allocator_init(void *start, void *end)
 {
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
   kmem.freelist = NULL;
-  freerange(vstart, vend);
+  freerange(start, end);
 }
 
 void
@@ -55,4 +54,19 @@ kfree(char *v)
   kmem.freelist = r;
   if(kmem.use_lock)
     release(&kmem.lock);
+}
+
+char*
+kalloc(void)
+{
+  struct run *r;
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  r = kmem.freelist;
+  if(r)
+    kmem.freelist = r->next;
+  if(kmem.use_lock)
+    release(&kmem.lock);
+  return (char*)r;
 }

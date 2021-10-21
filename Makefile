@@ -36,11 +36,11 @@ all: $(modules) FPGA_RAM
 LDFLAGS__ = -EL -nostartfiles -N -T scse.lds -O0 -G0 
 
 FPGA_RAM : $(modules) 
-	$(LD)  $(LDFLAGS__) $(AOBJECTS) $(COBJECTS) -o FPGA_Ram.elf
-	$(SZ) FPGA_Ram.elf
-	$(OD) -D -S -l FPGA_Ram.elf > FPGA_Ram_dasm.txt
-	$(OD) -D -z FPGA_Ram.elf > FPGA_Ram_modelsim.txt
-	$(OC) FPGA_Ram.elf -O srec FPGA_Ram.rec
+	$(LD)  $(LDFLAGS__) $(AOBJECTS) $(COBJECTS) -o vmlinux
+	$(SZ) vmlinux
+	$(OD) -D -S -l vmlinux > vmlinux_dasm.txt
+	$(OD) -D -z vmlinux > vmlinux_modelsim.txt
+	$(OC) vmlinux -O srec vmlinux.rec
 
 $(modules): 
 	$(MAKE) --directory=$@

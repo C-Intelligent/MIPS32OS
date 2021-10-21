@@ -1,5 +1,5 @@
 
-FPGA_Ram.elf:     file format elf32-tradlittlemips
+vmlinux:     file format elf32-tradlittlemips
 
 
 Disassembly of section .bootrom:

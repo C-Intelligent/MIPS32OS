@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: spinlock.o 
+all: spinlock.o string.o
 
 # main.S: main.c
 # 	$(CC) $^ -o $@

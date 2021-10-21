@@ -1,24 +1,12 @@
 #include "types.h"
 
-// Memory layout
+#define KERNEL_BASE 0x80000000
+#define KERNEL_TEXT_START 0x80001000
+#define KERNEL_ELF_END 0x80400000
+#define MAPPED_RAM_START KERNEL_ELF_END   //虚拟地址映射起始位置 (这是一个虚拟地址)
+#define PHYS_PG_SIZE 4*1024    //页框大小
+#define PHYS_PG_NUM 1024  //物理页框数量
+#define MAPPED_RAM_STOP (MAPPED_RAM_START + PHYS_PG_NUM * PHYS_PG_SIZE)    //虚拟地址映射起始位置
 
-#define EXTMEM  0x100000            // Start of extended memory
-#define PHYSTOP 0xE000000           // Top physical memory
-#define DEVSPACE 0xFE000000         // Other devices are at high addresses
+#define ADDR2PTR(a) ((void *) (a))
 
-// Key addresses for address space layout (see kmap in vm.c for layout)
-#define KERNBASE 0x80000000         // First kernel virtual address
-#define KERNLINK (KERNBASE+EXTMEM)  // Address where kernel is linked
-
-#ifndef __ASSEMBLER__
-
-static inline u_int v2p(void *a) { return ((u_int) (a))  - KERNBASE; }
-static inline void *p2v(u_int a) { return (void *) ((a) + KERNBASE); }
-
-#endif
-
-#define V2P(a) (((uint) (a)) - KERNBASE)
-#define P2V(a) (((void *) (a)) + KERNBASE)
-
-#define V2P_WO(x) ((x) - KERNBASE)    // same as V2P, but without casts
-#define P2V_WO(x) ((x) + KERNBASE)    // same as V2P, but without casts
