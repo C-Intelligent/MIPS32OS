@@ -143,6 +143,8 @@ void            syscall(void);
 // void            timerinit(void);
 
 // trap.c
+void trap_init();
+
 void            idtinit(void);
 extern u_int     ticks;
 void            tvinit(void);
@@ -154,6 +156,8 @@ extern struct spinlock tickslock;
 // void            uartputc(int);
 
 // vm.c
+u_int searchPN(void* addr);
+void allocate8KB(u_int *entryHi, u_int *pa);
 void            seginit(void);
 void            init_kpg_table(void); //为核心创建页表
 void            vmenable(void);
@@ -169,6 +173,10 @@ void            switchuvm(struct proc*);
 void            switchkvm(void); //切换到内核页表
 int             copyout(pde_t*, u_int, void*, u_int);
 void            clearpteu(pde_t *pgdir, char *uva);
+
+
+//fs_init.c
+void fs_init();
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

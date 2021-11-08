@@ -4,6 +4,8 @@
         "types.h": "c",
         "spinlock.h": "c",
         "mmu.h": "c",
-        "memlayout.h": "c"
+        "memlayout.h": "c",
+        "defs.h": "c",
+        "ff.h": "c"
     }
 }

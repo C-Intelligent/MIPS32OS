@@ -7,19 +7,24 @@ env_dir		  := kernel/env
 mem_dir		  := kernel/mem
 test_dir	  := kernel/test
 fdc_dir       := kernel/libfdc
+trap_dir      := kernel/trap
 
 link_script   := scse.lds
 
 # modules		  := kernel/boot kernel/drivers kernel/fs 
 modules		  := kernel/boot kernel/test kernel/drivers \
- 					kernel/fs kernel/init kernel/mem kernel/lib
+ 					kernel/fs kernel/init kernel/mem kernel/lib \
+					 kernel/trap kernel/fs
+
 AOBJECTS := $(boot_dir)/*.o \
 			$(drivers_dir)/*.o	 		  \
 			$(init_dir)/*.o \
 			$(mem_dir)/*.o \
 			$(lib_dir)/*.o \
-			# $(fdc_dir)/*.o   \
-			# $(fs_dir)/*.o
+			$(trap_dir)/*.o \
+			$(fs_dir)/*.o \
+			# $(fdc_dir)/*.o   
+			
 
 
 #.PHONY是一个伪目标，可以防止在Makefile中定义的只执行命令的目标和工作

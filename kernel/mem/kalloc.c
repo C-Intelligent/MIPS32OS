@@ -68,5 +68,7 @@ kalloc(void)
     kmem.freelist = r->next;
   if(kmem.use_lock)
     release(&kmem.lock);
+  
+  *(int*)r = 0;
   return (char*)r;
 }

@@ -32,11 +32,13 @@ init_kpg_table(void)
   switchkvm();
 }
 
+
+
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
 // 申请物理页，创建页表条目
-// 为一个虚拟地址寻找 PTE 若未找到则分配(alloc==0)
+// 为一个虚拟地址寻找 PTE 若未找到则分配(alloc==1)
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
@@ -66,7 +68,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
 // 在页表中建立一段虚拟内存到一段物理内存的映射
-/*注：起始地址必须规范给出（4K对齐）*/
+//警告：若不对齐可能会产生严重错误
 static int
 mappages(pde_t *pgdir, void *va, u_int size, u_int pa, int perm)
 {
@@ -79,10 +81,11 @@ mappages(pde_t *pgdir, void *va, u_int size, u_int pa, int perm)
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
     if(*pte & PTE_P)  //此地址已经映射过
-      panic("remap");
+      panic("remap: %x", pte);
     
     *pte = pa | perm | PTE_P;   //由于这些地址是4K对齐地址  所以末12位可以用来存放权限信息
 
+    
     if(a == last)
       break;
     a += PGSIZE;
@@ -128,4 +131,36 @@ inituvm(pde_t *pgdir, char *init, u_int sz)
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, (u_int)mem, PTE_W|PTE_U);
   memmove(mem, init, sz);
+}
+
+//由于tlb每次重填两项 故需确认页表填好对应项
+void allocate8KB(u_int *entryHi, u_int *arr) {
+  pte_t *pte = walkpgdir(kpgdir, entryHi, 1); //找到条目
+  u_int pa = *pte;
+  if (pa == 0) {
+    pa = (u_int)kalloc();
+    mappages(kpgdir, entryHi, PGSIZE, pa, PTE_W|PTE_U);
+  }
+  pa = pa & 0xfffff000;
+  arr[0] = pa - 0x80000000;
+  pte = walkpgdir(kpgdir, entryHi + PGSIZE, 1); //找到条目
+  pa = *pte;
+  if (pa == 0) {
+    pa = (u_int)kalloc();
+    mappages(kpgdir, entryHi + PGSIZE, PGSIZE, pa, PTE_W|PTE_U);
+  }
+  pa = pa & 0xfffff000;
+  arr[1] = pa - 0x80000000; 
+}
+
+//@已弃用
+//查找虚拟地址对应的物理页号
+u_int searchPN(void* addr) {
+  pte_t *pte = walkpgdir(kpgdir, addr, 1); //找到条目
+  u_int pa = *pte;
+  if (pa == 0) {
+    pa = (u_int)kalloc();
+    mappages(kpgdir, addr, PGSIZE, pa, PTE_W|PTE_U);
+  }
+  return pa - 0x80000000;
 }

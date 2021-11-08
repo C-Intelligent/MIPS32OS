@@ -1,10 +1,11 @@
 INCLUDES	  := -I../inc/
 
-all:  elf.o ff.o 
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o
 
+.PHONY: clean
+all: fs_init.o
 
 clean:
 	rm -rf *~ *.o
