@@ -72,6 +72,10 @@ _mips_general_exception:  # 中断处理地址
 kernel_sp:
 			.word 0
 
+			.globl tmp_sp		#save the sp register when exception occur
+tmp_sp:
+			.word 0
+
 			.globl mCONTEXT
 mCONTEXT:
 			.word 0
@@ -88,10 +92,17 @@ delay:
 temp:
 			.word 16
 
-            .globl curtf
+            .globl curtf  //用于保存进程快照
 curtf:
 			.word 0
 
+            .globl curasid
+curasid:
+			.word 0
+            .globl curproc
+curproc:
+			.word 0
+			
 
 
 
@@ -104,9 +115,9 @@ LEAF(_start)
 	/* Disable interrupts */
 	mtc0	zero, CP0_STATUS
 
-        /* Disable watch exception. */
-        mtc0    zero, CP0_WATCHLO
-        mtc0    zero, CP0_WATCHHI
+	/* Disable watch exception. */
+	mtc0    zero, CP0_WATCHLO
+	mtc0    zero, CP0_WATCHHI
 
 	
 	/* Zero the BSS */

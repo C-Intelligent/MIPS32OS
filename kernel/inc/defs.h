@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "../drivers/ff.h"
 
 // bio.c
 // void            binit(void);
@@ -14,7 +15,8 @@
 // void            panic(char*) __attribute__((noreturn));
 
 // exec.c
-int             exec(char*, char**);
+// int             exec(char*, char**);
+int             exec(char*, int, char**);
 
 // file.c
 // struct file*    filealloc(void);
@@ -58,7 +60,7 @@ int             exec(char*, char**);
 char*           kalloc(void);
 void            kfree(char*);
 void            phys_page_allocator_init(void*, void*);
-void            kinit2(void*, void*);
+
 
 // kbd.c
 // void            kbdintr(void);
@@ -111,7 +113,7 @@ void            wakeup(void*);
 void            yield(void);
 
 // swtch.S
-void            swtch(struct context**, struct context*);
+void            swtch(struct trapframe* save_to, struct trapframe * to_load);
 
 // spinlock.c
 void            acquire(struct spinlock*);
@@ -137,10 +139,9 @@ int             argptr(int, char**, int);
 int             argstr(int, char**);
 int             fetchint(u_int, int*);
 int             fetchstr(u_int, char**);
-void            syscall(void);
 
 // timer.c
-// void            timerinit(void);
+void            timer_init(void);
 
 // trap.c
 void trap_init();
@@ -150,11 +151,6 @@ extern u_int     ticks;
 void            tvinit(void);
 extern struct spinlock tickslock;
 
-// uart.c
-// void            uartinit(void);
-// void            uartintr(void);
-// void            uartputc(int);
-
 // vm.c
 u_int searchPN(void* addr);
 void allocate8KB(u_int *entryHi, u_int *pa);
@@ -163,11 +159,15 @@ void            init_kpg_table(void); //为核心创建页表
 void            vmenable(void);
 pde_t*          setupkpg_t(void);  //设置核心页表
 char*           uva2ka(pde_t*, char*);
+
+//为用户分配虚拟空间
 int             allocuvm(pde_t*, u_int, u_int);
 int             deallocuvm(pde_t*, u_int, u_int);
+
+int loaduvm(pde_t *pgdir, char *addr, FIL *fp, u_int offset, u_int sz);
+
 void            freevm(pde_t*);
 void            inituvm(pde_t*, char*, u_int);  //初始化用户进程页表
-// int             loaduvm(pde_t*, char*, struct inode*, u_int, u_int);
 pde_t*          copyuvm(pde_t*, u_int);
 void            switchuvm(struct proc*);
 void            switchkvm(void); //切换到内核页表
@@ -180,5 +180,23 @@ void fs_init();
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+// #define KERNBASE 0x80010000
+
+// #define VPT (ULIM + PDMAP )
+// #define KSTACKTOP (VPT-0x100)
+// #define KSTKSIZE (8*BY2PG)
+// #define ULIM 0x80000000
+
+// #define UVPT (ULIM - PDMAP)
+// #define UPAGES (UVPT - PDMAP)
+// #define UENVS (UPAGES - PDMAP)
+
+// #define UTOP UENVS
+// #define UXSTACKTOP (UTOP)
+// #define TIMESTACK 0x82000000
+
+// #define USTACKTOP (UTOP - 2*BY2PG)
+// #define UTEXT 0x00400000
 
 

@@ -7,7 +7,8 @@
 .text
 LEAF(handle_tlb)
 
-//注：每次重填8KB，否则会出问题
+//注：每次重填8KB，否则会出问题 entryHi需要设置asid
+//所有空间全局可访问（以后可优化）
  	addiu	sp,sp,-48
     sw	v0,44(sp)
     sw	v1,40(sp)
@@ -29,6 +30,10 @@ LEAF(handle_tlb)
  	move	a0,s0
  	jal	 allocate8KB
     nop
+
+	//entryHi |= asid
+	lw t1, curasid
+ 	or	s0,s0, t1
 
     //enlo0 = pa[0];
  	lw	v0,16(sp)

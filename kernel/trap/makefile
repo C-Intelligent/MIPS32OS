@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: _tlb.o trap.o
+all: _tlb.o trap.o sys.o syscall.o timer.o set_timer.o handle_int.o swtch.o exec.o
 
 # main.S: main.c
 # 	$(CC) $^ -o $@

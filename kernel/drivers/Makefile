@@ -1,6 +1,6 @@
 INCLUDES	  := -I../inc/
 
-all: diskio.o sd.o uart.o console.o elf.o ff.o memory.o printf.o print.o 
+all: diskio.o sd.o uart.o console.o ff.o memory.o printf.o print.o 
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o

@@ -3,27 +3,37 @@ boot_dir	  := kernel/boot
 init_dir	  := kernel/init
 lib_dir		  := kernel/lib
 fs_dir		  := kernel/fs
-env_dir		  := kernel/env
+proc_dir	  := kernel/proc
 mem_dir		  := kernel/mem
-test_dir	  := kernel/test
 fdc_dir       := kernel/libfdc
 trap_dir      := kernel/trap
+user_dir      := kernel/user
 
 link_script   := scse.lds
 
 # modules		  := kernel/boot kernel/drivers kernel/fs 
-modules		  := kernel/boot kernel/test kernel/drivers \
+modules		  := kernel/boot kernel/drivers \
  					kernel/fs kernel/init kernel/mem kernel/lib \
-					 kernel/trap kernel/fs
+					 kernel/trap kernel/fs  kernel/user\
+					kernel/proc \
+					# kernel/apps
 
 AOBJECTS := $(boot_dir)/*.o \
 			$(drivers_dir)/*.o	 		  \
-			$(init_dir)/*.o \
 			$(mem_dir)/*.o \
 			$(lib_dir)/*.o \
 			$(trap_dir)/*.o \
 			$(fs_dir)/*.o \
-			# $(fdc_dir)/*.o   
+			$(init_dir)/*.o \
+			$(proc_dir)/*.o \
+			# $(fdc_dir)/*.o   #$(user_dir)/*.o \
+
+LIBS := 	$(drivers_dir)/*.o	 		  \
+			$(lib_dir)/*.o \
+			# $(proc_dir)/*.o \
+			
+
+APPS := console
 			
 
 
@@ -34,18 +44,22 @@ ASOURCES= \
 
 CSOURCES= \
 
-all: $(modules) FPGA_RAM
+all: $(modules) FPGA_RAM $(APPS)
 
 
 # COBJECTS=$(CSOURCES:.c=.o)
 LDFLAGS__ = -EL -nostartfiles -N -T scse.lds -O0 -G0 
 
 FPGA_RAM : $(modules) 
-	$(LD)  $(LDFLAGS__) $(AOBJECTS) $(COBJECTS) -o vmlinux
+	$(LD)  $(LDFLAGS__) $(AOBJECTS)  -o vmlinux
 	$(SZ) vmlinux
 	$(OD) -D -S -l vmlinux > vmlinux_dasm.txt
 	$(OD) -D -z vmlinux > vmlinux_modelsim.txt
 	$(OC) vmlinux -O srec vmlinux.rec
+
+APPFLAGS = -EL -nostartfiles -N -T user.lds -O0 -G0 
+$(APPS):
+	$(LD) $(APPFLAGS) $(LIBS) kernel/apps/$@.c -o kernel/apps/$@
 
 $(modules): 
 	$(MAKE) --directory=$@

@@ -8,21 +8,41 @@ _mips_atomic_xchg(volatile u_int *addr, u_int newval)
                 : : :);
 }
 
+//CP0_STATUS $12  STATUS_CU0 0x10000000  (STATUS_CU0 | 0x1)
 static inline void
 cli(void)
 {
-  asm volatile("cli");
+  asm volatile("mfc0	$t0, $12;"\
+  				"li	$t1, 0x10000001;"\
+				"or	$t0, $t1;xor	$t0, 0x1;"\
+				"mtc0	$t0, $12;");
 }
 
 static inline void
 sti(void)
 {
-  asm volatile("sti");
+  asm volatile("mfc0	$t0,	$12;"\
+  				"li	$t1, 0x10000001;"\
+				"or	$t0, $t1;"\
+				"mtc0	$t0, $12;");
 }
 
 struct trapframe {
+  /* Saved main processor registers. */
+	unsigned long regs[32];
+
+	/* Saved special registers. */
+	unsigned long cp0_status;
+	unsigned long hi;
+	unsigned long lo;
+	unsigned long cp0_badvaddr;
+	unsigned long cp0_cause;
+	unsigned long cp0_epc;
+	unsigned long pc;
+
+
   // registers as pushed by pusha
-  u_int edi;
+  // u_int edi;
 //   uint esi;
 //   uint ebp;
 //   uint oesp;      // useless & ignored

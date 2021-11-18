@@ -5,9 +5,9 @@
 #include "../inc/memlayout.h"
 
 void alloc_test();
+void spaces_teat();
 
-u_int nop = 0;
-
+// extern void uinit();
 
 int 
 main(void) {
@@ -30,21 +30,28 @@ main(void) {
   /*文件系统初始化*/
   fs_init();
 
+  // uinit();
+
   // process_init();
-  /*初始化用户进程  os通过回复现场返回进程，因此进程初始化需要自建第一个现场allocproc*/
-  // userinit();
+  /*初始化第一个用户进程  os通过回复现场返回进程，因此进程初始化需要自建第一个现场allocproc*/
+  userinit();
 
-  // mpmain();
+  //初始化时钟中断
+  //timer_init();
 
-  printf("finish init%u\n", nop);
+  // idtinit();       // load idt register
+  // xchg(&cpu->started, 1); // tell startothers() we're up
+  scheduler();     // start running processes
 
+  printf("finish init\n");
 
   while (1);
-
-  return 0;
 }
 
-void nopf(){}
+void spaces_teat() {
+  //测试切换切换不同虚拟地址空间
+}
+
 
 void alloc_test() {
   /*线性地址*/
@@ -68,14 +75,4 @@ void alloc_test() {
     printf("%x-->%d\n", addr, *((int*)addr));
   }
   
-}
-
-// Common CPU setup code.
-static void
-mpmain(void)
-{
-  // cprintf("cpu%d: starting\n", cpu->id);
-  // idtinit();       // load idt register
-  // xchg(&cpu->started, 1); // tell startothers() we're up
-  scheduler();     // start running processes
 }

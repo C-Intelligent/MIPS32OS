@@ -1,12 +1,15 @@
 #include "../inc/types.h"
 #include "../inc/defs.h"
-// #include "param.h"
 #include "../inc/memlayout.h"
 #include "../inc/mmu.h"
 #include "../inc/string.h"
 #include "../inc/printf.h"
+#include "../drivers/ff.h"
 
-pde_t *kpgdir;  // for use in scheduler()
+
+pde_t *kpgdir, *curpgdir;  // for use in scheduler()
+extern u_int curasid;
+
 // struct segdesc gdt[NSEGS];
 
 // This table defines the kernel's mappings, which are present in
@@ -17,8 +20,8 @@ static struct kmap {
   u_int phys_end;
   int perm;   //权限 
 } kmap[] = {  //核心从0x80000000开始
- { (void*)KERNEL_BASE, KERNEL_BASE,   KERNEL_TEXT_START,    PTE_W}, // exception space
- { (void*)KERNEL_TEXT_START, KERNEL_TEXT_START, KERNEL_ELF_END, 0},     // kern text+rodata data+memory
+// { (void*)KERNEL_BASE, KERNEL_BASE,   KERNEL_TEXT_START,    PTE_W}, // exception space
+// { (void*)KERNEL_TEXT_START, KERNEL_TEXT_START, KERNEL_ELF_END, 0},     // kern text+rodata data+memory
 //  { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory
 //  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, // more devices
 };
@@ -29,6 +32,7 @@ void
 init_kpg_table(void)
 {
   kpgdir = setupkpg_t();
+  curpgdir = kpgdir;
   switchkvm();
 }
 
@@ -115,7 +119,28 @@ setupkpg_t(void)
 void
 switchkvm(void)
 {
+  curpgdir = kpgdir;
+  curasid = 0;
 //   lcr3(v2p(kpgdir));   // switch to the kernel page table
+}
+
+// Switch TSS and h/w page table to correspond to process p.
+void
+switchuvm(struct proc *p)
+{
+  pushcli();
+  // cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
+  // cpu->gdt[SEG_TSS].s = 0;
+  // cpu->ts.ss0 = SEG_KDATA << 3;
+  // cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;
+  // ltr(SEG_TSS << 3);
+  // if(p->pgdir == 0)
+  //   panic("switchuvm: no pgdir");
+  // lcr3(v2p(p->pgdir));  // switch to new address space
+
+  curpgdir = p->pgdir;
+  curasid = p->asid;
+  popcli();
 }
 
 // Load the initcode into address 0 of pgdir.
@@ -133,21 +158,23 @@ inituvm(pde_t *pgdir, char *init, u_int sz)
   memmove(mem, init, sz);
 }
 
+
+
 //由于tlb每次重填两项 故需确认页表填好对应项
 void allocate8KB(u_int *entryHi, u_int *arr) {
-  pte_t *pte = walkpgdir(kpgdir, entryHi, 1); //找到条目
+  pte_t *pte = walkpgdir(curpgdir, entryHi, 1); //找到条目
   u_int pa = *pte;
   if (pa == 0) {
     pa = (u_int)kalloc();
-    mappages(kpgdir, entryHi, PGSIZE, pa, PTE_W|PTE_U);
+    mappages(curpgdir, entryHi, PGSIZE, pa, PTE_W|PTE_U);
   }
   pa = pa & 0xfffff000;
   arr[0] = pa - 0x80000000;
-  pte = walkpgdir(kpgdir, entryHi + PGSIZE, 1); //找到条目
+  pte = walkpgdir(curpgdir, entryHi + PGSIZE, 1); //找到条目
   pa = *pte;
   if (pa == 0) {
     pa = (u_int)kalloc();
-    mappages(kpgdir, entryHi + PGSIZE, PGSIZE, pa, PTE_W|PTE_U);
+    mappages(curpgdir, entryHi + PGSIZE, PGSIZE, pa, PTE_W|PTE_U);
   }
   pa = pa & 0xfffff000;
   arr[1] = pa - 0x80000000; 
@@ -156,11 +183,170 @@ void allocate8KB(u_int *entryHi, u_int *arr) {
 //@已弃用
 //查找虚拟地址对应的物理页号
 u_int searchPN(void* addr) {
-  pte_t *pte = walkpgdir(kpgdir, addr, 1); //找到条目
+  pte_t *pte = walkpgdir(curpgdir, addr, 1); //找到条目
   u_int pa = *pte;
   if (pa == 0) {
     pa = (u_int)kalloc();
-    mappages(kpgdir, addr, PGSIZE, pa, PTE_W|PTE_U);
+    mappages(curpgdir, addr, PGSIZE, pa, PTE_W|PTE_U);
   }
   return pa - 0x80000000;
+}
+
+// Clear PTE_U on a page. Used to create an inaccessible
+// page beneath the user stack.
+void
+clearpteu(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if(pte == 0)
+    panic("clearpteu");
+  *pte &= ~PTE_U;
+}
+
+//将程序加载到线性空间(虚拟空间)
+int
+loaduvm(pde_t *pgdir, char *addr, FIL *fp, u_int offset, u_int sz)
+{
+  u_int i, pa, n;
+  pte_t *pte;
+  FRESULT res;
+
+  uint32_t oldptr = fp->fptr;
+  // printf("old file ptr: %u\n", oldptr);
+  res = f_lseek(fp, offset);
+  // printf("new file ptr: %u\n", fp->fptr);
+
+
+  if((u_int) addr % PGSIZE != 0)
+    panic("loaduvm: addr must be page aligned");
+
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
+      panic("loaduvm: address should exist");
+    pa = PTE_ADDR(*pte); //物理页框首地址
+    if(sz - i < PGSIZE)
+      n = sz - i;
+    else
+      n = PGSIZE;
+    
+    uint32_t br = 0;
+    res = f_read(fp, (void*)pa, n, &br);
+    if (br != n) return -1;
+  }
+  res = f_lseek(fp, oldptr);
+  return 0;
+}
+
+
+//增长虚存空间
+int
+allocuvm(pde_t *pgdir, u_int oldsz, u_int newsz)
+{
+  char *mem;
+  u_int a;
+
+  if(newsz >= KERNEL_BASE)
+    return 0;
+  if(newsz < oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(oldsz); //向上取整
+
+  for(; a < newsz; a += PGSIZE){
+    mem = kalloc();
+    if(mem == 0){
+      printf("allocuvm out of memory\n");
+      deallocuvm(pgdir, newsz, oldsz);
+      return 0;
+    }
+    // memset(mem, 0, PGSIZE);
+    mappages(pgdir, (void*)a, PGSIZE, (u_int)mem, PTE_W|PTE_U);
+  }
+  return newsz;
+}
+
+int
+deallocuvm(pde_t *pgdir, u_int oldsz, u_int newsz)
+{
+  pte_t *pte;
+  u_int a, pa;
+
+  if(newsz >= oldsz)
+    return oldsz;
+
+  a = PGROUNDUP(newsz);
+  for(; a  < oldsz; a += PGSIZE){
+    pte = walkpgdir(pgdir, (char*)a, 0);
+    if(!pte)
+      a += (NPTENTRIES - 1) * PGSIZE;
+    else if((*pte & PTE_P) != 0){
+      pa = PTE_ADDR(*pte);
+      if(pa == 0)
+        panic("kfree");
+      char *v = (char*)pa;
+      kfree(v);
+      *pte = 0;
+    }
+  }
+  return newsz;
+}
+
+//复制len长度的字节到虚拟地址空间 p:内核空间，线性地址
+int
+copyout(pde_t *pgdir, u_int va, void *p, u_int len)
+{
+  char *buf, *pa0;
+  u_int n, va0; //va0:虚拟页首地址
+
+  buf = (char*)p;
+  while(len > 0){
+    va0 = (u_int)PGROUNDDOWN(va);
+    pa0 = uva2ka(pgdir, (char*)va0);  //pa0线性首地址
+    if(pa0 == 0)
+      return -1;
+    n = PGSIZE - (va - va0); //
+    if(n > len)
+      n = len;
+    memmove(pa0 + (va - va0), buf, n);
+    len -= n;
+    buf += n;
+    va = va0 + PGSIZE;
+  }
+  return 0;
+}
+
+
+// 根据虚拟地址获取线性页首地址
+char*
+uva2ka(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if((*pte & PTE_P) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+  return (char*)(*pte);
+}
+
+//释放虚拟空间
+void
+freevm(pde_t *pgdir)
+{
+  u_int i;
+
+  if(pgdir == 0)
+    panic("freevm: no pgdir");
+  deallocuvm(pgdir, KERNEL_BASE, 0);
+
+  for(i = 0; i < NPDENTRIES; i++){
+    if(pgdir[i] & PTE_P){
+      char * v = (char*)PTE_ADDR(pgdir[i]);
+      kfree(v);
+    }
+  }
+  kfree((char*)pgdir);
 }

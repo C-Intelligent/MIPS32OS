@@ -6,6 +6,7 @@
         "mmu.h": "c",
         "memlayout.h": "c",
         "defs.h": "c",
-        "ff.h": "c"
+        "ff.h": "c",
+        "mfp_io.h": "c"
     }
 }

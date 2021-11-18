@@ -1,5 +1,30 @@
 #include "../inc/types.h"
-#include "../inc/defs.h"
+#include "../inc/string.h"
+
+int
+strlen(const char *s)
+{
+  int n;
+
+  for(n = 0; s[n]; n++)
+    ;
+  return n;
+}
+
+
+char*
+safestrcpy(char *s, const char *t, int n)
+{
+  char *os;
+  
+  os = s;
+  if(n <= 0)
+    return os;
+  while(--n > 0 && (*s++ = *t++) != 0)
+    ;
+  *s = 0;
+  return os;
+}
 
 void*
 memset(void *dst, int c, u_int n)

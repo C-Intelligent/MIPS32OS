@@ -119,16 +119,22 @@ struct context {
 
 // 未使用态、初始态、等待态、就绪态、运行态、僵尸态
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
-// Per-process state
+//进程控制块
 struct proc {
   u_int sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   volatile int pid;            // Process ID
+  u_int asid;
   struct proc *parent;         // Parent process
+
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
+
+  //是否应该放在这个位置还待定
+  u_int cr3;
+
   void *chan;                  // If non-zero, sleeping on chan
   int killed;                  // If non-zero, have been killed
   struct file *ofile[NOFILE];  // Open files

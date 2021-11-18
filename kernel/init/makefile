@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: main.o 
+all: main.o initcode.o
 
 # main.S: main.c
 # 	$(CC) $^ -o $@

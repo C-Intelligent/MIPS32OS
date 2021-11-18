@@ -1,10 +1,10 @@
 #include "../inc/defs.h"
 
 extern unsigned long exception_handlers[];
-// extern void handle_int();
+extern void handle_int();
 // extern void handle_reserved();
 extern void handle_tlb();
-// extern void handle_sys();
+extern void handle_sys();
 // extern void handle_mod();
 
 void *set_except_vector(int n, void *addr);
@@ -17,13 +17,14 @@ void trap_init()
         // set_except_vector(i, handle_reserved);
     }
 
-    // set_except_vector(0, handle_int);
+    set_except_vector(0, handle_int);
     // set_except_vector(1, handle_mod);
     set_except_vector(2, handle_tlb);
 
 
     set_except_vector(3, handle_tlb);
-    // set_except_vector(8, handle_sys);
+    set_except_vector(4, handle_int);
+    set_except_vector(8, handle_sys);
 }
 
 void *set_except_vector(int n, void *addr)
