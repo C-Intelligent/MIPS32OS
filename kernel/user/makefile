@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: usys.o
+all: usys.o print.o printf.o
 
 
 include ../../include.mk

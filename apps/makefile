@@ -15,4 +15,4 @@ INCLUDES	  := -I../inc/
 all: console.o
 
 
-include ../../include.mk
+include ../include.mk

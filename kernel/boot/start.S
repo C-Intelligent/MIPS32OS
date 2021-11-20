@@ -43,8 +43,11 @@ _mips_general_exception:  # 中断处理地址
 		 */
 #  1:	//j	1b
 # 	nop
+		sw		sp, user_sp
+		lw		sp, kernel_sp
 
-		sw		sp, kernel_sp 
+		//这一句debug用
+		mfc0 k1, CP0_EPC
 		mfc0	k1,CP0_CAUSE
 		
 		la	k0, exception_handlers 
@@ -70,6 +73,9 @@ _mips_general_exception:  # 中断处理地址
 .data
 			.globl kernel_sp		#save the sp register when exception occur
 kernel_sp:
+			.word 0
+			.globl user_sp		#save the sp register when exception occur
+user_sp:
 			.word 0
 
 			.globl tmp_sp		#save the sp register when exception occur

@@ -7,6 +7,8 @@
         "memlayout.h": "c",
         "defs.h": "c",
         "ff.h": "c",
-        "mfp_io.h": "c"
+        "mfp_io.h": "c",
+        "user.h": "c",
+        "file.h": "c"
     }
 }

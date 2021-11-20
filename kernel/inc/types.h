@@ -121,6 +121,7 @@ struct context {
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 //进程控制块
 struct proc {
+  u_int firstcall; //首次唤醒（需手动填tlb）
   u_int sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
@@ -131,6 +132,8 @@ struct proc {
 
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
+
+  
 
   //是否应该放在这个位置还待定
   u_int cr3;

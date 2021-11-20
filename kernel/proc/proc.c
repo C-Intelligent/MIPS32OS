@@ -3,6 +3,7 @@
 #include "../inc/mips/mips32.h"
 #include "../inc/mmu.h"
 #include "../inc/printf.h"
+#include "../inc/file.h"
 
 struct {
   struct spinlock lock;
@@ -24,6 +25,10 @@ extern pde_t *curpgdir;
 
 //调度器现场
 struct trapframe scheduler_tf;
+
+extern struct file _stdout_f_;
+
+extern void tlb_out(u_int va);
 
 
 
@@ -74,6 +79,11 @@ found:
   p->asid = nextasid++;
   release(&ptable.lock);
 
+  p->firstcall = 1;
+
+  //初始化输入输出流
+  p->ofile[0] = &_stdout_f_;
+
   //分配内核栈
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
@@ -121,11 +131,7 @@ userinit(void)
     panic("userinit: out of memory?");
 
   inituvm(p->pgdir, (char*)uinit, (u_int)(enduinit - uinit)); //初始化代码空间
-  // curpgdir = p->pgdir;
-  // u_int* add = 0;
-  // printf("uvm -> %x\n", *add);
-  // printf("uvm -> %x\n", *(add + 1));
-  // printf("uvm -> %x\n", *(add + 2));
+  
 
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
@@ -171,7 +177,14 @@ scheduler(void)
       
       switchuvm(p);
       p->state = RUNNING;
-      swtch(&scheduler_tf, p->tf);
+      //切换前要保存 kernel_sp
+      //由于不支持异常嵌套，这里事先填写tlb(若首次分配时间片)
+      printf("sche pro :%s  pgdir:%x\n", p->name, p->pgdir);
+      if (p->firstcall) {
+        p->firstcall = 0;
+        tlb_out(p->tf->regs[31]);
+      }
+      swtchk2u(&scheduler_tf, p->tf);
       //保存调度器上下文 scheduler_tf 加载进程tf
 
       //再次切回核心进程

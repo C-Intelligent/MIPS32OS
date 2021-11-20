@@ -74,7 +74,7 @@ exec(char *path, int argc, char **argv)
                 if(stat.fsize < Pro_header[i].p_offset + Pro_header[i].p_filesz)
                     goto bad;
 
-                printf("[load_elf] pro size:%u  mem size:%u\n", Pro_header[i].p_filesz, Pro_header[i].p_memsz);
+                printf("[load_elf] pro size:%u  mem size: %u\n", Pro_header[i].p_filesz, Pro_header[i].p_memsz);
                 printf("[load_elf] pro offset:%u\n", Pro_header[i].p_offset);
                 //分配内存 load  sz:old_size
                 if((sz = allocuvm(pgdir, sz, Pro_header[i].p_vaddr + Pro_header[i].p_memsz)) == 0)
@@ -143,6 +143,11 @@ exec(char *path, int argc, char **argv)
 
     curproc->tf->regs[31] = Elf_header->e_entry; //ra
     curproc->tf->pc = Elf_header->e_entry;
+    curproc->tf->cp0_epc = Elf_header->e_entry;
+    printf("pro entry: %x\n", Elf_header->e_entry);
+
+    //要更新entryhi
+    // curproc->tf->hi = (Elf_header->e_entry & 0xffffe000) | curproc->asid;
 
     switchuvm(curproc);
     freevm(oldpgdir);

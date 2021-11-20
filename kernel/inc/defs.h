@@ -25,7 +25,7 @@ int             exec(char*, int, char**);
 // void            fileinit(void);
 // int             fileread(struct file*, char*, int n);
 // int             filestat(struct file*, struct _m_stat*);
-// int             filewrite(struct file*, char*, int n);
+int             filewrite(struct file*, char*, int n);
 
 // fs.c
 // void            readsb(int dev, struct superblock *sb);

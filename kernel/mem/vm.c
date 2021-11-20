@@ -140,6 +140,7 @@ switchuvm(struct proc *p)
 
   curpgdir = p->pgdir;
   curasid = p->asid;
+  //printf("curpgdir:%x\n", curpgdir);
   popcli();
 }
 

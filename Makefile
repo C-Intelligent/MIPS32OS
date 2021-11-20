@@ -15,7 +15,7 @@ link_script   := scse.lds
 modules		  := kernel/boot kernel/drivers \
  					kernel/fs kernel/init kernel/mem kernel/lib \
 					 kernel/trap kernel/fs  kernel/user\
-					kernel/proc \
+					kernel/proc apps\
 					# kernel/apps
 
 AOBJECTS := $(boot_dir)/*.o \
@@ -28,8 +28,7 @@ AOBJECTS := $(boot_dir)/*.o \
 			$(proc_dir)/*.o \
 			# $(fdc_dir)/*.o   #$(user_dir)/*.o \
 
-LIBS := 	$(drivers_dir)/*.o	 		  \
-			$(lib_dir)/*.o \
+LIBS := 	$(user_dir)/*.o	 		  \
 			# $(proc_dir)/*.o \
 			
 
@@ -57,9 +56,12 @@ FPGA_RAM : $(modules)
 	$(OD) -D -z vmlinux > vmlinux_modelsim.txt
 	$(OC) vmlinux -O srec vmlinux.rec
 
-APPFLAGS = -EL -nostartfiles -N -T user.lds -O0 -G0 
+APPFLAGS = -EL -nostartfiles -N -T user.lds -O0 -G0
 $(APPS):
-	$(LD) $(APPFLAGS) $(LIBS) kernel/apps/$@.c -o kernel/apps/$@
+	$(LD) $(APPFLAGS) $(LIBS) apps/$@.o -o apps/$@
+	$(SZ) apps/$@
+	$(OD) -D -S -l apps/$@ > apps/$@_dasm.txt
+	$(OD) -D -z apps/$@ > apps/$@_modelsim.txt
 
 $(modules): 
 	$(MAKE) --directory=$@

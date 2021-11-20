@@ -25,6 +25,13 @@ nop
 
 END(exec)
 
+LEAF(write)
+    li	v0, SYS_write
+    syscall
+    jr	ra
+    nop
+END(write)
+
 
 
 LEAF(usys)

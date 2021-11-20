@@ -3,6 +3,7 @@
 #include "../inc/types.h"
 #include "../inc/defs.h"
 #include "../inc/memlayout.h"
+#include "../drivers/console.h"
 
 void alloc_test();
 void spaces_teat();
@@ -25,6 +26,12 @@ main(void) {
   trap_init();
 
   // alloc_test();
+  /*
+  printf("input:");
+  char ch = (char)getchar();
+  printf("getchar: %c\n", ch);
+  */
+  
 
 
   /*文件系统初始化*/

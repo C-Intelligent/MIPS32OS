@@ -4,27 +4,34 @@
 #include "../inc/trap.h"
 
 //void  swtch(struct trapframe* save_to, struct trapframe * to_load);
-LEAF(swtch)
+LEAF(swtchk2u)
     .set at
 
-    subu	sp,sp, 8
-    sw a0, 0(sp)
-    sw a1, 4(sp)
-    //临时保存sp
-    sw sp, tmp_sp
+    sw		sp, kernel_sp
+
+    //临时保存a1
+    sw a1, tmp_sp
 
     //a0 -> sp
     move sp, a0
+    addiu	sp,sp, TF_SIZE //SAVE_TF中还要再减
     SAVE_TF
 
     //a1 -> sp
     lw sp, tmp_sp
-    lw sp, 4(sp)
     RESTORE_TF
     
-    lw sp, tmp_sp
-    //恢复现场运行
-    addiu	sp,sp, 8
-    jal ra
+    //跳转到用户空间运行
+    //lw k0, (ra)
+    //mtc0	ra,CP0_EPC
+    //nop
+    //nop
+    //j ra
+    //nop
+
     nop
-END(swtch)
+    j	ra
+	//rfe
+	nop
+
+END(swtchk2u)
