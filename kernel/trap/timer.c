@@ -74,6 +74,12 @@ void timer_init() {
         TIMER_TCSR0_ARHT0 |
         TIMER_TCSR0_UDT0
     );
+
+    //     set_TCSR0(
+    //     TIMER_TCSR0_ENIT0 
+    //     // | TIMER_TCSR0_UDT0
+    // );
+
     enable_timer0();
 }
 

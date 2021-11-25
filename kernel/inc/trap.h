@@ -141,7 +141,7 @@
     //nor	v1, $0, v1 				 
     //and	v0, v1 					 
     //or	v0, t0 					 
-    mtc0	v0,CP0_STATUS 		 
+    //mtc0	v0,CP0_STATUS 		 
     lw	v1,TF_LO(sp)                                       
     mtlo	v1                               
     lw	v0,TF_HI(sp)                     

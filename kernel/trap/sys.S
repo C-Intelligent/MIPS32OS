@@ -7,6 +7,8 @@
 //解决方案1：进入系统调用前关中断(?是否可行?用户态是否有权限?)
 //解决方案2: 核心态不做切换(进入后判断)-->怎么实现?
 
+.set noreorder
+
 LEAF(handle_sys)
     .set at
     CLI
@@ -38,12 +40,10 @@ back2here:
     //恢复sp
     lw sp, kernel_sp
 
+    //注意！！系统调用不能和调度器共同使用核心栈! 否则会出现数据覆盖的错误!
     nop
     jal SystemCall
     nop
-
-    CLI
-    
 
     
     //恢复快照
@@ -59,18 +59,12 @@ back2here:
     //将status保存在k1中 下次回到核心态时直接写入
     //li		k1, 0x00007c02
     
-
     //回到引发中断的下一条指令  （由中断程序完成）
     //(epc + 4) 把正确返回地址存在epc中
     mfc0	k0,CP0_EPC
     move v1, k0
-    //sw k0, _cp0_epc_
-    //STI  //开中断的瞬间可能会跳到int处理程序中
-    //lw k0, _cp0_epc_
-    //mtc0	k0,CP0_EPC
-    //nop
 
-    CLI
+    STI
     
     nop
     jr v1

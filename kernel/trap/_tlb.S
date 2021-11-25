@@ -14,8 +14,20 @@ LEAF(handle_tlb)
 //注意不能设置全局位
 //!!!要切回kernal_sp(start.S中)
 
+
 	//恢复sp
+	//-----------特殊情形检测----------------//
+    //--epc属于内核空间
+    mfc0 k0, CP0_EPC
+    li k1, 0x80000000
+    and k0, k0, k1
+    bnez k0, tlb_j_from_kernel
+    //--------------------------------------//
     lw sp, kernel_sp
+
+tlb_j_from_kernel:
+    sw sp, kernel_sp
+
 
  	addiu	sp,sp,-48
     sw	v0,44(sp)

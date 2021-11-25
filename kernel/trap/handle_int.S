@@ -8,6 +8,9 @@
 //保存现场 (从异常分发程序过来) 
 //将当前寄存器状态保存到curtf
 //加载
+
+.set noreorder
+
 LEAF(handle_int)
     .set at
     CLI
@@ -27,6 +30,7 @@ LEAF(handle_int)
     //注意这个位置是有隐患的 若当前处于内核态 kernel_sp并非最新位置
     //因此需要判断进入int的位置是否为核心
 
+    lw sp, tmp_sp
     //-----------特殊情形检测----------------//
     //--epc属于内核空间
     mfc0 k0, CP0_EPC
@@ -36,6 +40,7 @@ LEAF(handle_int)
     //--------------------------------------//
     lw sp, kernel_sp
 j_from_kernel:
+    sw sp, kernel_sp
     
     //计数器清零
     nop
@@ -43,14 +48,18 @@ j_from_kernel:
     nop
 
     nop
+    //jal disable_timer0
+    nop
+
+    nop
     jal timer_work
     nop
 
-    lw sp, cur_context
-    RESTORE_TF
-    //lw k0, 20(sp)
-    eret
-    nop
+    //lw sp, cur_context
+    //RESTORE_TF
+    //eret
+    //nop
+
 
     //恢复调度器 scheduler_tf_ptr
     lw sp, scheduler_tf_ptr

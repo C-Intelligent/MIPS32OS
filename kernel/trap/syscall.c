@@ -42,7 +42,7 @@ extern int sys_fork(void);
 void
 SystemCall(struct trapframe *tf)
 {
-  sti();
+  //sti();
   switch(tf->regs[2]){
     case SYS_sysTest: 
       tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
