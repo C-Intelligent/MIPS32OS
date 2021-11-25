@@ -1,12 +1,6 @@
-// Mutual exclusion spin locks.
 #include "../inc/types.h"
 #include "../inc/defs.h"
 #include "../inc/mips/mips32.h"
-// #include "param.h"
-// #include "x86.h"
-// #include "memlayout.h"
-// #include "mmu.h"
-// #include "proc.h"
 
 void
 initlock(struct spinlock *lk, char *name)
@@ -33,7 +27,7 @@ acquire(struct spinlock *lk)
   // reordered before it. 
 
   
-  while(_mips_atomic_xchg(&lk->locked, 1) != 0);
+  //while(_mips_atomic_xchg(&lk->locked, 1) != 0);
   
   // Record info about lock acquisition for debugging.
   // lk->cpu = cpu;
@@ -50,7 +44,7 @@ release(struct spinlock *lk)
   // lk->pcs[0] = 0;
   // lk->cpu = 0;
 
-  _mips_atomic_xchg(&lk->locked, 0);
+  //_mips_atomic_xchg(&lk->locked, 0);
 
   popcli();
 }

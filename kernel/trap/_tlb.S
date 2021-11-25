@@ -3,14 +3,20 @@
 #include <asm/cp0regdef.h>
 #include <asm/asm.h>
 //#include "../inc/defs.h"
+#include "../inc/trap.h"
 
 .text
 LEAF(handle_tlb)
+	.set at
 
 //注：每次重填8KB，否则会出问题 entryHi需要设置asid
 //所有空间全局可访问（以后可优化）
 //注意不能设置全局位
 //!!!要切回kernal_sp(start.S中)
+
+	//恢复sp
+    lw sp, kernel_sp
+
  	addiu	sp,sp,-48
     sw	v0,44(sp)
     sw	v1,40(sp)
@@ -72,6 +78,17 @@ LEAF(handle_tlb)
 	//恢复用户sp
 	lw		sp, user_sp 
 
+	//将status保存在k1中 下次回到核心态时直接写入
+    li		k1, 0x00007c02
+
+	//开中断
+	mfc0	k0,CP0_EPC
+	sw k0, _cp0_epc_
+    STI  //开中断的瞬间可能会跳到int处理程序中
+    lw k0, _cp0_epc_
+    nop
+
+	ehb
     eret
  	nop
 

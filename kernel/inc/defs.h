@@ -2,49 +2,20 @@
 #include "types.h"
 #include "../drivers/ff.h"
 
-// bio.c
-// void            binit(void);
-// struct buf*     bread(u_int, u_int);
-// void            brelse(struct buf*);
-// void            bwrite(struct buf*);
-
-// console.c
-// void            consoleinit(void);
-// void            cprintf(char*, ...);
-// void            consoleintr(int(*)(void));
-// void            panic(char*) __attribute__((noreturn));
-
 // exec.c
-// int             exec(char*, char**);
 int             exec(char*, int, char**);
 
 // file.c
+void fs_init();
+struct file*    get_std_out_f();
 // struct file*    filealloc(void);
 // void            fileclose(struct file*);
-// struct file*    filedup(struct file*);
+struct file*    filedup(struct file*);
 // void            fileinit(void);
 // int             fileread(struct file*, char*, int n);
 // int             filestat(struct file*, struct _m_stat*);
 int             filewrite(struct file*, char*, int n);
 
-// fs.c
-// void            readsb(int dev, struct superblock *sb);
-// int             dirlink(struct inode*, char*, u_int);
-// struct inode*   dirlookup(struct inode*, char*, u_int*);
-// struct inode*   ialloc(u_int, short);
-// struct inode*   idup(struct inode*);
-// void            iinit(void);
-// void            ilock(struct inode*);
-// void            iput(struct inode*);
-// void            iunlock(struct inode*);
-// void            iunlockput(struct inode*);
-// void            iupdate(struct inode*);
-// int             namecmp(const char*, const char*);
-// struct inode*   namei(char*);
-// struct inode*   nameiparent(char*, char*);
-// int             readi(struct inode*, char*, u_int, u_int);
-// void            stati(struct inode*, struct _m_stat*);
-// int             writei(struct inode*, char*, u_int, u_int);
 
 // ide.c
 // void            ideinit(void);
@@ -104,7 +75,7 @@ int             growproc(int);
 int             kill(int);
 void            process_init(void);  //进程初始化
 void            procdump(void);
-void            scheduler(void) __attribute__((noreturn));
+void            scheduler(void) __attribute__((noreturn)); //调度器
 void            sched(void);
 // void            sleep(void*, struct spinlock*);
 void            userinit(void);
@@ -124,21 +95,8 @@ void            release(struct spinlock*);
 void            pushcli(void);
 void            popcli(void);
 
-// // string.c
-// int             memcmp(const void*, const void*, u_int);
-// void*           memmove(void*, const void*, u_int);
-// void*           memset(void*, int, u_int);
-// char*           safestrcpy(char*, const char*, int);
-// int             strlen(const char*);
-// int             strncmp(const char*, const char*, u_int);
-// char*           strncpy(char*, const char*, int);
-
 // syscall.c
-int             argint(int, int*);
-int             argptr(int, char**, int);
-int             argstr(int, char**);
-int             fetchint(u_int, int*);
-int             fetchstr(u_int, char**);
+
 
 // timer.c
 void            timer_init(void);
@@ -152,12 +110,12 @@ void            tvinit(void);
 extern struct spinlock tickslock;
 
 // vm.c
-u_int searchPN(void* addr);
-void allocate8KB(u_int *entryHi, u_int *pa);
-void            seginit(void);
+u_int           searchPN(void* addr);
+void            allocate8KB(u_int *entryHi, u_int *pa);
+// void            seginit(void);
 void            init_kpg_table(void); //为核心创建页表
-void            vmenable(void);
-pde_t*          setupkpg_t(void);  //设置核心页表
+// void            vmenable(void);
+pde_t*          setupkpg_t(void);  //创建页表
 char*           uva2ka(pde_t*, char*);
 
 //为用户分配虚拟空间
@@ -175,28 +133,10 @@ int             copyout(pde_t*, u_int, void*, u_int);
 void            clearpteu(pde_t *pgdir, char *uva);
 
 
-//fs_init.c
-void fs_init();
+
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
-// #define KERNBASE 0x80010000
-
-// #define VPT (ULIM + PDMAP )
-// #define KSTACKTOP (VPT-0x100)
-// #define KSTKSIZE (8*BY2PG)
-// #define ULIM 0x80000000
-
-// #define UVPT (ULIM - PDMAP)
-// #define UPAGES (UVPT - PDMAP)
-// #define UENVS (UPAGES - PDMAP)
-
-// #define UTOP UENVS
-// #define UXSTACKTOP (UTOP)
-// #define TIMESTACK 0x82000000
-
-// #define USTACKTOP (UTOP - 2*BY2PG)
-// #define UTEXT 0x00400000
 
 

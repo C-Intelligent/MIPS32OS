@@ -229,13 +229,13 @@ Disassembly of section .text:
  35c:	00c08025 	move	s0,a2
  360:	00e08825 	move	s1,a3
  364:	3c140000 	lui	s4,0x0
- 368:	26940bf0 	addiu	s4,s4,3056
+ 368:	26940c28 	addiu	s4,s4,3112
  36c:	3c150000 	lui	s5,0x0
  370:	1000003a 	b	45c <lp_Print+0x12c>
- 374:	26b50a0c 	addiu	s5,s5,2572
+ 374:	26b50a44 	addiu	s5,s5,2628
  378:	24060018 	li	a2,24
  37c:	3c050000 	lui	a1,0x0
- 380:	24a50dd4 	addiu	a1,a1,3540
+ 380:	24a50e0c 	addiu	a1,a1,3596
  384:	0240f809 	jalr	s2
  388:	02602025 	move	a0,s3
  38c:	1000ffff 	b	38c <lp_Print+0x5c>
@@ -353,7 +353,7 @@ Disassembly of section .text:
  54c:	26310004 	addiu	s1,s1,4
  550:	24060018 	li	a2,24
  554:	3c050000 	lui	a1,0x0
- 558:	24a50dd4 	addiu	a1,a1,3540
+ 558:	24a50e0c 	addiu	a1,a1,3596
  55c:	0240f809 	jalr	s2
  560:	02602025 	move	a0,s3
  564:	1000ffff 	b	564 <lp_Print+0x234>
@@ -388,7 +388,7 @@ Disassembly of section .text:
  5d8:	24020001 	li	v0,1
  5dc:	24060018 	li	a2,24
  5e0:	3c050000 	lui	a1,0x0
- 5e4:	24a50dd4 	addiu	a1,a1,3540
+ 5e4:	24a50e0c 	addiu	a1,a1,3596
  5e8:	0240f809 	jalr	s2
  5ec:	02602025 	move	a0,s3
  5f0:	1000ffff 	b	5f0 <lp_Print+0x2c0>
@@ -421,7 +421,7 @@ Disassembly of section .text:
  65c:	26310004 	addiu	s1,s1,4
  660:	24060018 	li	a2,24
  664:	3c050000 	lui	a1,0x0
- 668:	24a50dd4 	addiu	a1,a1,3540
+ 668:	24a50e0c 	addiu	a1,a1,3596
  66c:	0240f809 	jalr	s2
  670:	02602025 	move	a0,s3
  674:	1000ffff 	b	674 <lp_Print+0x344>
@@ -454,7 +454,7 @@ Disassembly of section .text:
  6e0:	26310004 	addiu	s1,s1,4
  6e4:	24060018 	li	a2,24
  6e8:	3c050000 	lui	a1,0x0
- 6ec:	24a50dd4 	addiu	a1,a1,3540
+ 6ec:	24a50e0c 	addiu	a1,a1,3596
  6f0:	0240f809 	jalr	s2
  6f4:	02602025 	move	a0,s3
  6f8:	1000ffff 	b	6f8 <lp_Print+0x3c8>
@@ -487,7 +487,7 @@ Disassembly of section .text:
  764:	26310004 	addiu	s1,s1,4
  768:	24060018 	li	a2,24
  76c:	3c050000 	lui	a1,0x0
- 770:	24a50dd4 	addiu	a1,a1,3540
+ 770:	24a50e0c 	addiu	a1,a1,3596
  774:	0240f809 	jalr	s2
  778:	02602025 	move	a0,s3
  77c:	1000ffff 	b	77c <lp_Print+0x44c>
@@ -521,7 +521,7 @@ Disassembly of section .text:
  7ec:	26310004 	addiu	s1,s1,4
  7f0:	24060018 	li	a2,24
  7f4:	3c050000 	lui	a1,0x0
- 7f8:	24a50dd4 	addiu	a1,a1,3540
+ 7f8:	24a50e0c 	addiu	a1,a1,3596
  7fc:	0240f809 	jalr	s2
  800:	02602025 	move	a0,s3
  804:	1000ffff 	b	804 <lp_Print+0x4d4>
@@ -542,7 +542,7 @@ Disassembly of section .text:
  840:	02c08825 	move	s1,s6
  844:	24060018 	li	a2,24
  848:	3c050000 	lui	a1,0x0
- 84c:	24a50dd4 	addiu	a1,a1,3540
+ 84c:	24a50e0c 	addiu	a1,a1,3596
  850:	0240f809 	jalr	s2
  854:	02602025 	move	a0,s3
  858:	1000ffff 	b	858 <lp_Print+0x528>
@@ -563,7 +563,7 @@ Disassembly of section .text:
  894:	02c08825 	move	s1,s6
  898:	24060018 	li	a2,24
  89c:	3c050000 	lui	a1,0x0
- 8a0:	24a50dd4 	addiu	a1,a1,3540
+ 8a0:	24a50e0c 	addiu	a1,a1,3596
  8a4:	0240f809 	jalr	s2
  8a8:	02602025 	move	a0,s3
  8ac:	1000ffff 	b	8ac <lp_Print+0x57c>
@@ -580,7 +580,7 @@ Disassembly of section .text:
  8d8:	26100001 	addiu	s0,s0,1
  8dc:	24060001 	li	a2,1
  8e0:	3c050000 	lui	a1,0x0
- 8e4:	24a50a08 	addiu	a1,a1,2568
+ 8e4:	24a50a40 	addiu	a1,a1,2624
  8e8:	0240f809 	jalr	s2
  8ec:	02602025 	move	a0,s3
  8f0:	8fbf0424 	lw	ra,1060(sp)
@@ -641,55 +641,57 @@ Disassembly of section .text:
  9a4:	00000000 	nop
  9a8:	00000000 	nop
 
-000009ac <usys>:
- 9ac:	afa40000 	sw	a0,0(sp)
- 9b0:	afa50004 	sw	a1,4(sp)
- 9b4:	afa60008 	sw	a2,8(sp)
- 9b8:	afa7000c 	sw	a3,12(sp)
- 9bc:	00801025 	move	v0,a0
- 9c0:	0000000c 	syscall
- 9c4:	03e00008 	jr	ra
- 9c8:	00000000 	nop
- 9cc:	00000000 	nop
+000009ac <fork>:
+ 9ac:	24020004 	li	v0,4
+ 9b0:	0000000c 	syscall
+ 9b4:	03e00008 	jr	ra
+ 9b8:	00000000 	nop
+ 9bc:	00000000 	nop
 
-000009d0 <main>:
- 9d0:	27bdffe8 	addiu	sp,sp,-24
- 9d4:	afbf0014 	sw	ra,20(sp)
- 9d8:	3c040000 	lui	a0,0x0
- 9dc:	0c00024d 	jal	934 <printf>
- 9e0:	24840df0 	addiu	a0,a0,3568
- 9e4:	1000ffff 	b	9e4 <main+0x14>
- 9e8:	00000000 	nop
+000009c0 <usys>:
+ 9c0:	afa40000 	sw	a0,0(sp)
+ 9c4:	afa50004 	sw	a1,4(sp)
+ 9c8:	afa60008 	sw	a2,8(sp)
+ 9cc:	afa7000c 	sw	a3,12(sp)
+ 9d0:	00801025 	move	v0,a0
+ 9d4:	0000000c 	syscall
+ 9d8:	03e00008 	jr	ra
+ 9dc:	00000000 	nop
+ 9e0:	00000000 	nop
+
+000009e4 <main>:
+ 9e4:	27bdffe8 	addiu	sp,sp,-24
+ 9e8:	afbf0014 	sw	ra,20(sp)
+ 9ec:	afb00010 	sw	s0,16(sp)
+ 9f0:	3c040000 	lui	a0,0x0
+ 9f4:	0c00024d 	jal	934 <printf>
+ 9f8:	24840e28 	addiu	a0,a0,3624
+ 9fc:	3c100000 	lui	s0,0x0
+ a00:	26100e28 	addiu	s0,s0,3624
+ a04:	24022711 	li	v0,10001
+ a08:	2442ffff 	addiu	v0,v0,-1
+ a0c:	5440ffff 	bnezl	v0,a0c <main+0x28>
+ a10:	2442ffff 	addiu	v0,v0,-1
+ a14:	0c00024d 	jal	934 <printf>
+ a18:	02002025 	move	a0,s0
+ a1c:	1000fffa 	b	a08 <main+0x24>
+ a20:	24022711 	li	v0,10001
 
 Disassembly of section .MIPS.abiflags:
 
-000009f0 <.MIPS.abiflags>:
- 9f0:	02200000 	0x2200000
- 9f4:	03000001 	movf	zero,t8,$fcc0
- 9f8:	00000000 	nop
- 9fc:	00000008 	jr	zero
- a00:	00000001 	movf	zero,zero,$fcc0
- a04:	00000000 	nop
+00000a28 <.MIPS.abiflags>:
+ a28:	02200000 	0x2200000
+ a2c:	03000001 	movf	zero,t8,$fcc0
+ a30:	00000000 	nop
+ a34:	00000008 	jr	zero
+ a38:	00000001 	movf	zero,zero,$fcc0
+ a3c:	00000000 	nop
 
 Disassembly of section .data:
 
-00000a08 <theFatalMsg-0x3cc>:
- a08:	00000000 	nop
- a0c:	000008b4 	teq	zero,zero,0x22
- a10:	000008c0 	sll	at,zero,0x3
- a14:	000008c0 	sll	at,zero,0x3
- a18:	000008c0 	sll	at,zero,0x3
- a1c:	000008c0 	sll	at,zero,0x3
- a20:	000008c0 	sll	at,zero,0x3
- a24:	000008c0 	sll	at,zero,0x3
- a28:	000008c0 	sll	at,zero,0x3
- a2c:	000008c0 	sll	at,zero,0x3
- a30:	000008c0 	sll	at,zero,0x3
- a34:	000008c0 	sll	at,zero,0x3
- a38:	000008c0 	sll	at,zero,0x3
- a3c:	000008c0 	sll	at,zero,0x3
- a40:	000008c0 	sll	at,zero,0x3
- a44:	000008c0 	sll	at,zero,0x3
+00000a40 <theFatalMsg-0x3cc>:
+ a40:	00000000 	nop
+ a44:	000008b4 	teq	zero,zero,0x22
  a48:	000008c0 	sll	at,zero,0x3
  a4c:	000008c0 	sll	at,zero,0x3
  a50:	000008c0 	sll	at,zero,0x3
@@ -743,7 +745,7 @@ Disassembly of section .data:
  b10:	000008c0 	sll	at,zero,0x3
  b14:	000008c0 	sll	at,zero,0x3
  b18:	000008c0 	sll	at,zero,0x3
- b1c:	0000056c 	0x56c
+ b1c:	000008c0 	sll	at,zero,0x3
  b20:	000008c0 	sll	at,zero,0x3
  b24:	000008c0 	sll	at,zero,0x3
  b28:	000008c0 	sll	at,zero,0x3
@@ -754,30 +756,30 @@ Disassembly of section .data:
  b3c:	000008c0 	sll	at,zero,0x3
  b40:	000008c0 	sll	at,zero,0x3
  b44:	000008c0 	sll	at,zero,0x3
- b48:	000005f8 	0x5f8
+ b48:	000008c0 	sll	at,zero,0x3
  b4c:	000008c0 	sll	at,zero,0x3
  b50:	000008c0 	sll	at,zero,0x3
- b54:	000008c0 	sll	at,zero,0x3
+ b54:	0000056c 	0x56c
  b58:	000008c0 	sll	at,zero,0x3
  b5c:	000008c0 	sll	at,zero,0x3
- b60:	0000067c 	0x67c
+ b60:	000008c0 	sll	at,zero,0x3
  b64:	000008c0 	sll	at,zero,0x3
  b68:	000008c0 	sll	at,zero,0x3
- b6c:	00000784 	0x784
+ b6c:	000008c0 	sll	at,zero,0x3
  b70:	000008c0 	sll	at,zero,0x3
  b74:	000008c0 	sll	at,zero,0x3
  b78:	000008c0 	sll	at,zero,0x3
  b7c:	000008c0 	sll	at,zero,0x3
- b80:	000008c0 	sll	at,zero,0x3
+ b80:	000005f8 	0x5f8
  b84:	000008c0 	sll	at,zero,0x3
  b88:	000008c0 	sll	at,zero,0x3
  b8c:	000008c0 	sll	at,zero,0x3
  b90:	000008c0 	sll	at,zero,0x3
- b94:	00000410 	0x410
- b98:	0000080c 	syscall	0x20
- b9c:	0000056c 	0x56c
+ b94:	000008c0 	sll	at,zero,0x3
+ b98:	0000067c 	0x67c
+ b9c:	000008c0 	sll	at,zero,0x3
  ba0:	000008c0 	sll	at,zero,0x3
- ba4:	000008c0 	sll	at,zero,0x3
+ ba4:	00000784 	0x784
  ba8:	000008c0 	sll	at,zero,0x3
  bac:	000008c0 	sll	at,zero,0x3
  bb0:	000008c0 	sll	at,zero,0x3
@@ -786,31 +788,31 @@ Disassembly of section .data:
  bbc:	000008c0 	sll	at,zero,0x3
  bc0:	000008c0 	sll	at,zero,0x3
  bc4:	000008c0 	sll	at,zero,0x3
- bc8:	000005f8 	0x5f8
- bcc:	000008c0 	sll	at,zero,0x3
- bd0:	000008c0 	sll	at,zero,0x3
- bd4:	000008c0 	sll	at,zero,0x3
- bd8:	00000860 	0x860
+ bc8:	000008c0 	sll	at,zero,0x3
+ bcc:	00000410 	0x410
+ bd0:	0000080c 	syscall	0x20
+ bd4:	0000056c 	0x56c
+ bd8:	000008c0 	sll	at,zero,0x3
  bdc:	000008c0 	sll	at,zero,0x3
- be0:	0000067c 	0x67c
+ be0:	000008c0 	sll	at,zero,0x3
  be4:	000008c0 	sll	at,zero,0x3
  be8:	000008c0 	sll	at,zero,0x3
- bec:	00000700 	sll	zero,zero,0x1c
- bf0:	000008b8 	0x8b8
- bf4:	000008c4 	0x8c4
- bf8:	000008c4 	0x8c4
- bfc:	000008c4 	0x8c4
- c00:	000008c4 	0x8c4
- c04:	000008c4 	0x8c4
- c08:	000008c4 	0x8c4
- c0c:	000008c4 	0x8c4
- c10:	000008c4 	0x8c4
- c14:	000008c4 	0x8c4
- c18:	000008c4 	0x8c4
- c1c:	000008c4 	0x8c4
- c20:	000008c4 	0x8c4
- c24:	000008c4 	0x8c4
- c28:	000008c4 	0x8c4
+ bec:	000008c0 	sll	at,zero,0x3
+ bf0:	000008c0 	sll	at,zero,0x3
+ bf4:	000008c0 	sll	at,zero,0x3
+ bf8:	000008c0 	sll	at,zero,0x3
+ bfc:	000008c0 	sll	at,zero,0x3
+ c00:	000005f8 	0x5f8
+ c04:	000008c0 	sll	at,zero,0x3
+ c08:	000008c0 	sll	at,zero,0x3
+ c0c:	000008c0 	sll	at,zero,0x3
+ c10:	00000860 	0x860
+ c14:	000008c0 	sll	at,zero,0x3
+ c18:	0000067c 	0x67c
+ c1c:	000008c0 	sll	at,zero,0x3
+ c20:	000008c0 	sll	at,zero,0x3
+ c24:	00000700 	sll	zero,zero,0x1c
+ c28:	000008b8 	0x8b8
  c2c:	000008c4 	0x8c4
  c30:	000008c4 	0x8c4
  c34:	000008c4 	0x8c4
@@ -864,7 +866,7 @@ Disassembly of section .data:
  cf4:	000008c4 	0x8c4
  cf8:	000008c4 	0x8c4
  cfc:	000008c4 	0x8c4
- d00:	000005c4 	0x5c4
+ d00:	000008c4 	0x8c4
  d04:	000008c4 	0x8c4
  d08:	000008c4 	0x8c4
  d0c:	000008c4 	0x8c4
@@ -875,30 +877,30 @@ Disassembly of section .data:
  d20:	000008c4 	0x8c4
  d24:	000008c4 	0x8c4
  d28:	000008c4 	0x8c4
- d2c:	00000604 	0x604
+ d2c:	000008c4 	0x8c4
  d30:	000008c4 	0x8c4
  d34:	000008c4 	0x8c4
- d38:	000008c4 	0x8c4
+ d38:	000005c4 	0x5c4
  d3c:	000008c4 	0x8c4
  d40:	000008c4 	0x8c4
- d44:	00000688 	0x688
+ d44:	000008c4 	0x8c4
  d48:	000008c4 	0x8c4
  d4c:	000008c4 	0x8c4
- d50:	00000790 	0x790
+ d50:	000008c4 	0x8c4
  d54:	000008c4 	0x8c4
  d58:	000008c4 	0x8c4
  d5c:	000008c4 	0x8c4
  d60:	000008c4 	0x8c4
- d64:	000008c4 	0x8c4
+ d64:	00000604 	0x604
  d68:	000008c4 	0x8c4
  d6c:	000008c4 	0x8c4
  d70:	000008c4 	0x8c4
  d74:	000008c4 	0x8c4
- d78:	00000544 	0x544
- d7c:	00000810 	mfhi	at
- d80:	000005c4 	0x5c4
+ d78:	000008c4 	0x8c4
+ d7c:	00000688 	0x688
+ d80:	000008c4 	0x8c4
  d84:	000008c4 	0x8c4
- d88:	000008c4 	0x8c4
+ d88:	00000790 	0x790
  d8c:	000008c4 	0x8c4
  d90:	000008c4 	0x8c4
  d94:	000008c4 	0x8c4
@@ -907,30 +909,44 @@ Disassembly of section .data:
  da0:	000008c4 	0x8c4
  da4:	000008c4 	0x8c4
  da8:	000008c4 	0x8c4
- dac:	00000604 	0x604
- db0:	000008c4 	0x8c4
- db4:	000008c4 	0x8c4
- db8:	000008c4 	0x8c4
- dbc:	00000864 	0x864
+ dac:	000008c4 	0x8c4
+ db0:	00000544 	0x544
+ db4:	00000810 	mfhi	at
+ db8:	000005c4 	0x5c4
+ dbc:	000008c4 	0x8c4
  dc0:	000008c4 	0x8c4
- dc4:	00000688 	0x688
+ dc4:	000008c4 	0x8c4
  dc8:	000008c4 	0x8c4
  dcc:	000008c4 	0x8c4
- dd0:	0000070c 	syscall	0x1c
+ dd0:	000008c4 	0x8c4
+ dd4:	000008c4 	0x8c4
+ dd8:	000008c4 	0x8c4
+ ddc:	000008c4 	0x8c4
+ de0:	000008c4 	0x8c4
+ de4:	00000604 	0x604
+ de8:	000008c4 	0x8c4
+ dec:	000008c4 	0x8c4
+ df0:	000008c4 	0x8c4
+ df4:	00000864 	0x864
+ df8:	000008c4 	0x8c4
+ dfc:	00000688 	0x688
+ e00:	000008c4 	0x8c4
+ e04:	000008c4 	0x8c4
+ e08:	0000070c 	syscall	0x1c
 
-00000dd4 <theFatalMsg>:
- dd4:	61746166 	0x61746166
- dd8:	7265206c 	0x7265206c
- ddc:	20726f72 	addi	s2,v1,28530
- de0:	6c206e69 	0x6c206e69
- de4:	72505f70 	0x72505f70
- de8:	21746e69 	addi	s4,t3,28265
- dec:	00000000 	nop
- df0:	73696874 	0x73696874
- df4:	20736920 	addi	s3,v1,26912
- df8:	736e6f63 	0x736e6f63
- dfc:	0a656c6f 	j	995b1bc <//.+0x955b1bc>
- e00:	00000000 	nop
+00000e0c <theFatalMsg>:
+ e0c:	61746166 	0x61746166
+ e10:	7265206c 	0x7265206c
+ e14:	20726f72 	addi	s2,v1,28530
+ e18:	6c206e69 	0x6c206e69
+ e1c:	72505f70 	0x72505f70
+ e20:	21746e69 	addi	s4,t3,28265
+ e24:	00000000 	nop
+ e28:	73696874 	0x73696874
+ e2c:	20736920 	addi	s3,v1,26912
+ e30:	736e6f63 	0x736e6f63
+ e34:	0a656c6f 	j	995b1bc <//.+0x955b1bc>
+ e38:	00000000 	nop
 
 Disassembly of section .reginfo:
 
@@ -1025,14 +1041,22 @@ Disassembly of section .pdr:
  134:	00000000 	nop
  138:	0000001d 	0x1d
  13c:	0000001f 	0x1f
- 140:	000009d0 	0x9d0
- 144:	80000000 	lb	zero,0(zero)
- 148:	fffffffc 	sdc3	$31,-4(ra)
+ 140:	000009c0 	sll	at,zero,0x7
+ 144:	00000000 	nop
+ 148:	00000000 	nop
  14c:	00000000 	nop
  150:	00000000 	nop
- 154:	00000018 	mult	zero,zero
+ 154:	00000000 	nop
  158:	0000001d 	0x1d
  15c:	0000001f 	0x1f
+ 160:	000009e4 	0x9e4
+ 164:	80010000 	lb	at,0(zero)
+ 168:	fffffffc 	sdc3	$31,-4(ra)
+ 16c:	00000000 	nop
+ 170:	00000000 	nop
+ 174:	00000018 	mult	zero,zero
+ 178:	0000001d 	0x1d
+ 17c:	0000001f 	0x1f
 
 Disassembly of section .gnu.attributes:
 

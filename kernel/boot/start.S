@@ -12,13 +12,11 @@
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
 #include <asm/asm.h>
+#include "../inc/trap.h"
+.set at
 
 #异常分发程序入口
 .section .text.exc_vec3
-# NESTED(except_vec3, 0, sp)
-# 		.set	noat
-# 		.set	push
-# 		#.set	noreorder
 
 __tlb_refill:
 		nop
@@ -37,14 +35,33 @@ __cache_error_loop:
 
 		.org 0x180
 _mips_general_exception:  # 中断处理地址
+		//di  /* Disable interrupts - may not be required */
+
+		//mtc0 k1, CP0_STATUS
+		//li		k1, 0x00007c02
+		//mtc0 k1, CP0_STATUS
+
+		mfc0 k1, CP0_EPC
 		/*
 		 * Register saving is delayed as long as we dont know
 		 * which registers really need to be saved.
 		 */
-#  1:	//j	1b
-# 	nop
-		sw		sp, user_sp
-		lw		sp, kernel_sp
+
+		//sw zero, _cli_flag_
+		//此位置可能被硬中断打断（syscall指令引起）-->异常状态是否能进硬中断？
+		//因此如果检测到此位置属于用户引发的异常
+		//则返回 _mips_general_exception
+		//位置判定 _mips_general_exception 与 _close_interrupt_之间
+		//--上述未实现
+		CLI
+_close_interrupt_:
+		//li k0, 1
+		//sw k0, _cli_flag_
+
+		//这一句有巨大隐患  可能在还未重填之前就进异常
+		//导致sp错误  故移除
+		//lw		sp, kernel_sp
+
 
 		//这一句debug用
 		mfc0 k1, CP0_EPC
@@ -98,8 +115,17 @@ delay:
 temp:
 			.word 16
 
-            .globl curtf  //用于保存进程快照
+			
+            .globl cur_context  //用于保存进程快照(调度)
+cur_context:
+			.word 0
+
+            .globl curtf  //用于保存进程快照(系统调用)
 curtf:
+			.word 0
+			
+            .globl scheduler_tf_ptr  //用于保存调度器快照
+scheduler_tf_ptr:
 			.word 0
 
             .globl curasid
@@ -108,6 +134,12 @@ curasid:
             .globl curproc
 curproc:
 			.word 0
+            .globl _cp0_epc_
+_cp0_epc_:
+			.word 0
+            .globl _cli_flag_
+_cli_flag_:
+			.word 1
 			
 
 
@@ -136,10 +168,6 @@ LEAF(_start)
 	li v1, 0x00000000
 	sw v1, 0(v0)
 	addi v0, 4
-
-	
-	
-
 
     la v0, _fbss
 	la v1, _end
@@ -174,7 +202,8 @@ LEAF(_start)
 	/* jump to main */
 
 
-	li		k0, 0x00007c01	#UM=0;CP0=0;IE=0,内核态，开中断
+	//li		k0, 0x00007c01	#UM=0;CP0=0;IE=0,内核态，开中断
+	li		k0, 0x00007c00
 	mtc0	k0,CP0_STATUS
 
 	jal	main

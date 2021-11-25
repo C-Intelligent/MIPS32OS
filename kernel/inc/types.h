@@ -131,9 +131,7 @@ struct proc {
   struct proc *parent;         // Parent process
 
   struct trapframe *tf;        // Trap frame for current syscall
-  struct context *context;     // swtch() here to run process
-
-  
+  struct trapframe *context;     // 用于调度
 
   //是否应该放在这个位置还待定
   u_int cr3;

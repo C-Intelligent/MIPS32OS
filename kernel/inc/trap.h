@@ -49,21 +49,34 @@
 #define TF_SIZE		((TF_PC)+4)
 
 .macro STI
-	mfc0	t0,	CP0_STATUS
-	li	t1, (STATUS_CU0 | 0x1)
-	or	t0, t1
-	mtc0	t0, CP0_STATUS
-	
+	mfc0	k0,	CP0_STATUS
+	ori	k0, k0, 0x1
+	mtc0	k0, CP0_STATUS
 .endm
+
+// .macro STI
+// 	mfc0	k0,	CP0_STATUS
+// 	li	k1, (STATUS_CU0 | 0x1)
+// 	or	k0, k1
+// 	mtc0	k0, CP0_STATUS
+	
+// .endm
 
 
 .macro CLI
-	mfc0	t0, CP0_STATUS
-	li	t1, (STATUS_CU0 | 0x1)
-	or	t0, t1
-	xor	t0, 0x1
-	mtc0	t0, CP0_STATUS
+	mfc0	k0, CP0_STATUS
+	li	k1, 0xfffffffe
+	and k0, k0, k1
+	mtc0	k0, CP0_STATUS
 .endm
+
+// .macro CLI
+// 	mfc0	k0, CP0_STATUS
+// 	li	k1, (STATUS_CU0 | 0x1)
+// 	or	k0, k1
+// 	xor	k0, 0x1
+// 	mtc0	k0, CP0_STATUS
+// .endm
 
 .set noat
 .macro SAVE_TF    
@@ -71,7 +84,7 @@
     subu	sp,sp, TF_SIZE
 
     sw	k0,TF_REG29(sp)                  
-    sw	$2,TF_REG2(sp)                   
+    sw	v0,TF_REG2(sp)                   
     mfc0	v0,CP0_STATUS                    
     sw	v0,TF_STATUS(sp)                 
     mfc0	v0,CP0_CAUSE                     
@@ -118,16 +131,16 @@
 .endm
 
 .macro RESTORE_TF                                  
-    mfc0	t0,CP0_STATUS                    
-    ori	t0,0x3                          
-    xori	t0,0x3                          
-    mtc0	t0,CP0_STATUS                    
-    lw	v0,TF_STATUS(sp)             
-    li	v1, 0xff00 				 
-    and	t0, v1 					 
-    nor	v1, $0, v1 				 
-    and	v0, v1 					 
-    or	v0, t0 					 
+    //mfc0	t0,CP0_STATUS                    
+    //ori	t0,0x3                          
+    //xori	t0,0x3                          
+    //mtc0	t0,CP0_STATUS                    
+    lw	v0,TF_STATUS(sp)            
+    //li	v1, 0xff00 				 
+    //and	t0, v1 					 
+    //nor	v1, $0, v1 				 
+    //and	v0, v1 					 
+    //or	v0, t0 					 
     mtc0	v0,CP0_STATUS 		 
     lw	v1,TF_LO(sp)                                       
     mtlo	v1                               

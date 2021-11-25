@@ -12,19 +12,19 @@ _mips_atomic_xchg(volatile u_int *addr, u_int newval)
 static inline void
 cli(void)
 {
-  asm volatile("mfc0	$t0, $12;"\
-  				"li	$t1, 0x10000001;"\
-				"or	$t0, $t1;xor	$t0, 0x1;"\
-				"mtc0	$t0, $12;");
+  asm volatile("mfc0	$k0, $12;"\
+  				"li	$k1, 0x10000001;"\
+				"or	$k0, $k1;xor	$k0, 0x1;"\
+				"mtc0	$k0, $12;");
 }
 
 static inline void
 sti(void)
 {
-  asm volatile("mfc0	$t0,	$12;"\
-  				"li	$t1, 0x10000001;"\
-				"or	$t0, $t1;"\
-				"mtc0	$t0, $12;");
+  asm volatile("mfc0	$k0,	$12;"\
+  				"li	$k1, 0x10000001;"\
+				"or	$k0, $k1;"\
+				"mtc0	$k0, $12;");
 }
 
 struct trapframe {
@@ -39,38 +39,4 @@ struct trapframe {
 	unsigned long cp0_cause;
 	unsigned long cp0_epc;
 	unsigned long pc;
-
-
-  // registers as pushed by pusha
-  // u_int edi;
-//   uint esi;
-//   uint ebp;
-//   uint oesp;      // useless & ignored
-//   uint ebx;
-//   uint edx;
-//   uint ecx;
-//   uint eax;
-
-//   // rest of trap frame
-//   ushort gs;
-//   ushort padding1;
-//   ushort fs;
-//   ushort padding2;
-//   ushort es;
-//   ushort padding3;
-//   ushort ds;
-//   ushort padding4;
-//   uint trapno;
-
-//   // below here defined by x86 hardware
-//   uint err;
-//   uint eip;
-//   ushort cs;
-//   ushort padding5;
-//   uint eflags;
-
-//   // below here only when crossing rings, such as from user to kernel
-//   uint esp;
-//   ushort ss;
-//   ushort padding6;
 };

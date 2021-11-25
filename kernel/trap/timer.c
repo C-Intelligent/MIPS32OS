@@ -4,6 +4,8 @@
 #include <mfp_io.h>
 #include <printf.h>
 
+#include "../inc/printf.h"
+
 #define AXI_CLOCK_PERIOD_HZ     50000000
 #define AXI_CLOCK_PERIOD_KHZ    50000
 
@@ -64,7 +66,7 @@ void set_timing_interval_ms(u32 ms) {
 // extern void set_exl();
 void timer_init() {
     set_TCSR0(0);
-    // set_exl();
+    //set_exl();
     // set_timing_interval_s(1);
     set_timing_interval_ms(1000);//中断时间
     set_TCSR0(
@@ -73,4 +75,8 @@ void timer_init() {
         TIMER_TCSR0_UDT0
     );
     enable_timer0();
+}
+
+void timer_work() {
+    printf("timer working..............\n");
 }

@@ -19,7 +19,6 @@ LEAF(exec)
 li	v0, SYS_exec
 
 syscall
-
 jr	ra
 nop
 
@@ -31,6 +30,13 @@ LEAF(write)
     jr	ra
     nop
 END(write)
+
+LEAF(fork)
+    li	v0, SYS_fork
+    syscall
+    jr	ra
+    nop
+END(fork)
 
 
 

@@ -351,3 +351,36 @@ freevm(pde_t *pgdir)
   }
   kfree((char*)pgdir);
 }
+
+//复制父进程的虚存空间
+pde_t*
+copyuvm(pde_t *pgdir, u_int sz)
+{
+  pde_t *d;
+  pte_t *pte;
+  u_int pa, i;
+  char *mem;
+
+  if((d = setupkpg_t()) == 0)
+    return 0;
+  
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: page not present");
+    pa = PTE_ADDR(*pte);
+    if((mem = kalloc()) == 0)
+      goto bad;
+    
+    memmove(mem, (char*)pa, PGSIZE);
+
+    if(mappages(d, (void*)i, PGSIZE, mem, PTE_W|PTE_U) < 0)
+      goto bad;
+  }
+  return d;
+
+bad:
+  freevm(d);
+  return 0;
+}

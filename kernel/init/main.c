@@ -42,13 +42,21 @@ main(void) {
   // process_init();
   /*初始化第一个用户进程  os通过回复现场返回进程，因此进程初始化需要自建第一个现场allocproc*/
   userinit();
+  printf("finish user init\n");
 
   //初始化时钟中断
-  //timer_init();
+  timer_init();
+  printf("finish time init\n");
+  // while (1) {
+  //   int count = 0;
+  //   while (count++ < 1000000);
+  //   printf("----\n");
+  // }
+  
 
   // idtinit();       // load idt register
   // xchg(&cpu->started, 1); // tell startothers() we're up
-  scheduler();     // start running processes
+  scheduler();     // start running processes.;;
 
   printf("finish init\n");
 

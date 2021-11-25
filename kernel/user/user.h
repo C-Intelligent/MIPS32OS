@@ -3,6 +3,7 @@
 int sysTest();
 int exec(char*, char**);
 int write(int, void*, int);
+int fork(void);
 
 
 

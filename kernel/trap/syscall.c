@@ -37,18 +37,44 @@ int sys_exec(char* path, int argc, char** argv) {
 
 extern int sys_write(int fd, char* buf, int n);
 extern void tlb_out(u_int va);
+extern int sys_fork(void);
 
 void
 SystemCall(struct trapframe *tf)
 {
-  if (tf->regs[2] == SYS_sysTest) 
-    tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
-  else if (tf->regs[2] == SYS_exec) {
-    tf->regs[2] = sys_exec(tf->regs[4], tf->regs[5], tf->regs[6]);
-    tlb_out(tf->regs[31]);
+  sti();
+  switch(tf->regs[2]){
+    case SYS_sysTest: 
+      tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_exec: 
+      tf->regs[2] = sys_exec(tf->regs[4], tf->regs[5], tf->regs[6]);
+      break;
+    case SYS_write:
+      // printf("write source addr: %x\n", tf->regs[5]);
+      tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_fork: 
+      tf->regs[2] = sys_fork();
+      tf->cp0_epc += 4;
+      break;
+    default: 
+      panic("syscall err");
+      break;
   }
-  else if (tf->regs[2] == SYS_write) 
-    tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
+
+  // if (tf->regs[2] == SYS_sysTest) 
+  //   tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
+  // else if (tf->regs[2] == SYS_exec) {
+  //   tf->regs[2] = sys_exec(tf->regs[4], tf->regs[5], tf->regs[6]);
+  //   tlb_out(tf->regs[31]);
+  // }
+  // else if (tf->regs[2] == SYS_write) 
+  //   tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
+  // else if (tf->regs[2] == SYS_write) 
+  //   tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
 }
 
 

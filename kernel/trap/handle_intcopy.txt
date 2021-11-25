@@ -1,0 +1,118 @@
+.set nomips16
+#include <asm/regdef.h>
+#include <asm/cp0regdef.h>
+#include <asm/asm.h>
+#include "../inc/trap.h"
+
+//从分发入口到处理程序不会使用栈和普通寄存器 故可以当作直接跳到这里来处理
+//保存现场 (从异常分发程序过来) 
+//将当前寄存器状态保存到curtf
+//加载
+LEAF(handle_int)
+    .set at
+    CLI
+
+    sw sp, tmp_sp
+    /*
+    //这里要考虑调度器是否填入了进程 若没有 则直接返回
+    lw k0, curproc
+    beqz k0, int_return
+
+    //-----------特殊情形检测----------------
+    //--epc属于内核空间直接返回
+    mfc0 k0, CP0_EPC
+    li k1, 0x80000000
+    and k0, k0, k1
+    bnez k0, int_direct_return
+    //--------------------------------------
+    */
+_save_tf_:
+    //保存快照 到curtf (其中保存了中断发生地址epc)
+    lw sp, curtf
+    
+    addiu	sp,sp, TF_SIZE //SAVE_TF中还要再减
+    SAVE_TF
+
+    lw k0, tmp_sp
+    sw	k0,TF_REG29(sp)
+
+    //恢复核心sp
+    lw k0, kernel_sp
+    beqz k0, _before_swtch_1
+    move sp, k0
+_before_swtch_1: //kernel_sp为0为未发生切换前
+
+    //计数器清零
+    nop
+    jal clear_timer0_int
+    nop
+    nop
+    jal timer_work
+    nop
+
+    //恢复调度器 scheduler_tf_ptr
+    lw sp, scheduler_tf_ptr
+    RESTORE_TF
+    mtc0 ra, CP0_EPC
+    mfc0 k0, CP0_EPC
+    nop
+    ehb
+    eret
+	nop
+
+//-----------以下部分暂时摈弃------------
+int_return:
+    //将status保存在k1中 下次回到核心态时直接写入
+    li		k1, 0x00007c02
+
+    nop
+    //回到调度器
+    mfc0 k0, CP0_EPC
+    mtc0 k0, CP0_EPC
+    j _clear_timer_
+    nop
+    
+int_direct_return:
+    //将status保存在k1中 下次回到核心态时直接写入
+    li		k1, 0x00007c02
+    
+    
+_clear_timer_:
+    sw sp, tmp_sp
+
+    //恢复核心sp
+    lw k0, kernel_sp
+    beqz k0, _before_swtch_2
+    move sp, k0
+_before_swtch_2: //kernel_sp为0为未发生切换前
+
+    SAVE_TF
+    //计数器清零
+    nop
+    jal clear_timer0_int
+    nop
+
+    nop
+    jal timer_work
+    nop
+
+    RESTORE_TF
+
+    lw sp, tmp_sp
+
+    ehb
+    eret
+	nop
+
+END(handle_int)
+
+
+LEAF(set_exl)
+    mfc0 v0, CP0_STATUS
+    li k0, 0xFFFFFFFD
+    and v0, k0
+    mtc0 v0, CP0_STATUS
+    ehb
+    jr ra
+    nop
+END(set_exl)

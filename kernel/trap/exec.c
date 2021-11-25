@@ -141,9 +141,13 @@ exec(char *path, int argc, char **argv)
 
     curproc->tf->regs[29] = sp; //sp
 
+    curproc->tf->cp0_status = 0x00007c00;
+
     curproc->tf->regs[31] = Elf_header->e_entry; //ra
     curproc->tf->pc = Elf_header->e_entry;
     curproc->tf->cp0_epc = Elf_header->e_entry;
+    //返回地址放在v1
+    curproc->tf->regs[3] = Elf_header->e_entry;
     printf("pro entry: %x\n", Elf_header->e_entry);
 
     //要更新entryhi
