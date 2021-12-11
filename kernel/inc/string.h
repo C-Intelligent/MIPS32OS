@@ -27,3 +27,5 @@ void *  memmove(void *dst, const void *src, u_int n);
 // long	strtol(const char *s, char **endptr, int base);
 
 char* safestrcpy(char *s, const char *t, int n);
+
+char* safebytecpy(u_int addr, const char b);

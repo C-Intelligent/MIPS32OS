@@ -12,7 +12,7 @@ INCLUDES	  := -I../inc/
 
 .PHONY: clean
 
-all: console.o
+all: console.o bash.o help.o
 
 
 include ../include.mk

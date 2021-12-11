@@ -8,6 +8,9 @@
 #define NULL ((void*) 0)
 #endif
 
+#define STDIN 0
+#define STDOUT 1
+
 
 #define NPROC        64  // maximum number of processes
 #define KSTACKSIZE 4096  // size of per-process kernel stack
@@ -97,7 +100,6 @@ struct spinlock {
   
   // For debugging:
   char *name;        // Name of lock.
-  struct cpu *cpu;   // The cpu holding the lock.
   u_int pcs[10];      // The call stack (an array of program counters)
                      // that locked the lock.
 };
@@ -108,24 +110,17 @@ struct file;
 struct inode;
 struct pipe;
 
-// 上下文
-struct context {
-  u_int edi;
-  u_int esi;
-  u_int ebx;
-  u_int ebp;
-  u_int eip;
-};
 
 // 未使用态、初始态、等待态、就绪态、运行态、僵尸态
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 //进程控制块
 struct proc {
-  u_int firstcall; //首次唤醒（需手动填tlb）
   u_int sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
+  char *ksp;
   enum procstate state;        // Process state
+  enum procstate laststate; 
   volatile int pid;            // Process ID
   u_int asid;
   struct proc *parent;         // Parent process
@@ -139,8 +134,9 @@ struct proc {
   void *chan;                  // If non-zero, sleeping on chan
   int killed;                  // If non-zero, have been killed
   struct file *ofile[NOFILE];  // Open files
-  struct inode *cwd;           // Current directory
-  char name[16];               // Process name (debugging)
+  // struct inode *cwd;           // Current directory
+  char* cwd;
+  char name[32];               // Process name (debugging)
 };
 
 struct _m_stat {
@@ -152,3 +148,19 @@ struct superblock {
 };
 
 
+#define CWDPATH_MAX 128
+
+
+
+#define PIPESIZE 512
+
+struct pipe {
+  struct spinlock lock;
+  char data[PIPESIZE];
+  struct proc *fa;  //father
+  struct proc *chi; //child
+  u_int nread;     // number of bytes read
+  u_int nwrite;    // number of bytes written
+  int readopen;   // read fd is still open
+  int writeopen;  // write fd is still open
+};

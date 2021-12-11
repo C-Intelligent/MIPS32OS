@@ -1752,6 +1752,9 @@ void get_fileinfo (     /* No return code */
       if (c == ' ') continue;           /* Skip padding spaces */
       if (c == RDDEM) c = (TCHAR)DDEM;  /* Restore replaced DDEM character */
       if (i == 9) *p++ = '.';           /* Insert a . if extension is exist */
+
+
+
 #if _USE_LFN
       if (IsUpper(c) && (dir[DIR_NTres] & (i >= 9 ? NS_EXT : NS_BODY)))
         c += 0x20;          /* To lower */
@@ -2067,6 +2070,7 @@ FRESULT create_name (   /* FR_OK: successful, FR_INVALID_NAME: could not create 
   if ((b & 0x0C) == 0x04) c |= NS_BODY; /* NT flag (Name body has only small capital) */
 
   sfn[NSFLAG] = c;      /* Store NT flag, File name is created */
+  // DIR_NTres
 
   return FR_OK;
 #endif

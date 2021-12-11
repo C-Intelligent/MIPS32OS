@@ -11,6 +11,8 @@
 
 .set noreorder
 
+//.global j_from_sys
+
 LEAF(handle_int)
     .set at
     CLI
@@ -36,10 +38,15 @@ LEAF(handle_int)
     mfc0 k0, CP0_EPC
     li k1, 0x80000000
     and k0, k0, k1
+    nop
     bnez k0, j_from_kernel
+    nop
+    nop
     //--------------------------------------//
     lw sp, kernel_sp
+    nop
 j_from_kernel:
+    nop
     sw sp, kernel_sp
     
     //计数器清零
@@ -52,7 +59,14 @@ j_from_kernel:
     nop
 
     nop
-    jal timer_work
+    //jal timer_work
+    nop
+
+    //这里还需给pgtable上锁
+
+    //改位就绪态
+    nop
+    jal proc2runnable
     nop
 
     //lw sp, cur_context
@@ -66,6 +80,9 @@ j_from_kernel:
     RESTORE_TF
     mtc0 ra, CP0_EPC
     mfc0 k0, CP0_EPC
+
+    //更新entryhi(ASID)
+    mtc0	zero,CP0_ENTRYHI
     nop
     eret
 	nop

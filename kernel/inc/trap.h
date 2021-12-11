@@ -135,7 +135,7 @@
     //ori	t0,0x3                          
     //xori	t0,0x3                          
     //mtc0	t0,CP0_STATUS                    
-    lw	v0,TF_STATUS(sp)            
+    //lw	v0,TF_STATUS(sp)            
     //li	v1, 0xff00 				 
     //and	t0, v1 					 
     //nor	v1, $0, v1 				 

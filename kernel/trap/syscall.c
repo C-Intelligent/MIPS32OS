@@ -6,11 +6,6 @@
 
 extern struct proc *proc;
 
-// int sys_sysTest(int a, int b, int c, int d) {
-//   printf("system call! %d - %d - %d - %d \n", a, b, c, d);
-//   return a + b + c + d;
-// }
-
 int sys_sysTest(int a, int b, int c, int d) {
   printf("system call!\n");
   return 0;
@@ -18,12 +13,12 @@ int sys_sysTest(int a, int b, int c, int d) {
 
 int sys_exec(char* path, int argc, char** argv) {
   //由于第一个进程启动时存在的空间变换问题可能导致出错 这里约定全1 path为初始化地址
-  printf("sys_exec! pathadd: 0x%x\n", path);
+  // printf("sys_exec! pathadd: 0x%x\n", path);
   if (0xffffffff == path) {
-    printf("to exec console\n");
-    return exec("console", 0, 0);
+    char *arr = "exec";
+    return exec("bin/console", 1, &arr);
   }
-  // else return exec(path, argc, argv);
+  else return exec(path, argc, argv);
   return 0;
 }
 /*
@@ -36,45 +31,81 @@ int sys_exec(char* path, int argc, char** argv) {
 */
 
 extern int sys_write(int fd, char* buf, int n);
-extern void tlb_out(u_int va);
+extern int sys_read(int fd, char* buf, int n);
 extern int sys_fork(void);
+extern int sys_exit(void);
+extern int sys_wait(void);
+extern int sys_uname(char* name, int len);
+extern int sys_pwd(char* cwd, int len);
+extern int sys_chdir(const char *path);
+extern int sys_close(int);
+extern int sys_pipe(int*);
+extern u_int sys_sbrk(int n);
 
 void
 SystemCall(struct trapframe *tf)
 {
   //sti();
+  //printf("syscall epc:%x \n", tf->cp0_epc);
   switch(tf->regs[2]){
     case SYS_sysTest: 
       tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
       tf->cp0_epc += 4;
       break;
+    case SYS_uname: 
+      tf->regs[2] = sys_uname(tf->regs[4], tf->regs[5]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_pwd: 
+      tf->regs[2] = sys_pwd(tf->regs[4], tf->regs[5]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_chdir: 
+      tf->regs[2] = sys_chdir(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
     case SYS_exec: 
       tf->regs[2] = sys_exec(tf->regs[4], tf->regs[5], tf->regs[6]);
+      extern u_int after_exec;
+      if (!after_exec) tf->cp0_epc += 4;
       break;
     case SYS_write:
       // printf("write source addr: %x\n", tf->regs[5]);
       tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
       tf->cp0_epc += 4;
       break;
+    case SYS_read:
+      tf->regs[2] = sys_read(tf->regs[4], tf->regs[5], tf->regs[6]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_pipe:
+      tf->regs[2] = sys_pipe(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_close:
+      tf->regs[2] = sys_close(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_sbrk:
+      tf->regs[2] = sys_sbrk(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
     case SYS_fork: 
       tf->regs[2] = sys_fork();
       tf->cp0_epc += 4;
       break;
+    case SYS_wait:
+      tf->regs[2] = sys_wait();
+      tf->cp0_epc += 4;
+      break;
+    case SYS_exit:
+      sys_exit();
+      break;
     default: 
-      panic("syscall err");
+      //panic("syscall err");
+      printf("syscall err: wrong syscall number\n");
       break;
   }
-
-  // if (tf->regs[2] == SYS_sysTest) 
-  //   tf->regs[2] = sys_sysTest(tf->regs[4], tf->regs[5], tf->regs[6], tf->regs[7]);
-  // else if (tf->regs[2] == SYS_exec) {
-  //   tf->regs[2] = sys_exec(tf->regs[4], tf->regs[5], tf->regs[6]);
-  //   tlb_out(tf->regs[31]);
-  // }
-  // else if (tf->regs[2] == SYS_write) 
-  //   tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
-  // else if (tf->regs[2] == SYS_write) 
-  //   tf->regs[2] = sys_write(tf->regs[4], tf->regs[5], tf->regs[6]);
 }
 
 

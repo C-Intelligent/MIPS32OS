@@ -30,6 +30,16 @@ extern struct trapframe* scheduler_tf_ptr;
 
 extern void tlb_out(u_int va);
 
+extern void back2sche();
+extern void sche2wake();
+
+void proc2runnable() {
+  curproc->state = RUNNABLE;
+}
+
+void lock_ptable() {
+  acquire(&ptable.lock);
+}
 
 
 void
@@ -80,10 +90,9 @@ found:
   p->asid = nextasid++;
   release(&ptable.lock);
 
-  p->firstcall = 1;
-
   //初始化输入输出流
-  p->ofile[0] = get_std_out_f();
+  p->ofile[STDIN] = get_std_in_f();
+  p->ofile[STDOUT] = get_std_out_f();
 
   //分配内核栈
   if((p->kstack = kalloc()) == 0){
@@ -109,6 +118,14 @@ found:
   memset(p->context, 0, sizeof *p->context);
   // p->context->eip = (u_int)forkret;
 
+  //分配文件目录名称空间
+  sp -= CWDPATH_MAX;
+  p->cwd = (char*)sp;
+
+  //设置内核栈栈顶（供系统调用使用）
+  p->ksp = (char*)sp;
+  printf("kstack top: %x\n", sp);
+
   return p;
 }
 
@@ -132,7 +149,7 @@ userinit(void)
     panic("userinit: out of memory?");
 
   inituvm(p->pgdir, (char*)uinit, (u_int)(enduinit - uinit)); //初始化代码空间
-  
+  printf("user pgdir:%x\n", p->pgdir);
 
   p->sz = PGSIZE;
   //memset(p->tf, 0, sizeof(*p->tf));
@@ -140,17 +157,20 @@ userinit(void)
   p->context->cp0_cause = 0x10001004;
   // p->tf->regs[29] = USTACKTOP;
   p->context->regs[29] = 0; //sp
-  p->context->regs[31] = 0; //ra
-  p->context->cp0_epc = 0;
+  p->context->regs[31] = 0x100; //ra
+  p->context->cp0_epc = 0x100;
   //cr3有什么作用？
   p->cr3 = (u_int)p->pgdir - 0x80000000;
-  p->context->pc = 0;
+  p->context->pc = 0x100;
   p->context->cp0_status = 0x00007c00;
 
   //v1放返回地址 -->经验证不适用
   //p->context->regs[3] = 0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
+  //进程当前目录：挂在/下
+  extern char curcwd[];
+  safestrcpy(p->cwd, curcwd, CWDPATH_MAX);
 //   p->cwd = namei("/");
 
   p->state = RUNNABLE;
@@ -161,6 +181,9 @@ userinit(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+u_int sche_return_addr_v;
+u_int from_sche = 0;
+
 void
 scheduler(void)
 {
@@ -184,23 +207,43 @@ scheduler(void)
       curtf = p->tf;
       cur_context = p->context;
       
+      
       switchuvm(p);
       p->state = RUNNING;
       //切换前要保存 kernel_sp
       //由于不支持异常嵌套，这里事先填写tlb(若首次分配时间片)
-      printf("sche pro :%s  pgdir:%x\n", p->name, p->pgdir);
       
-      if (p->firstcall) {
-        p->firstcall = 0;
-        tlb_out(p->context->regs[31]);
-      }
-      //保存调度器上下文 scheduler_tf 加载进程tf
-      swtchk2u(&scheduler_tf, p->context);
+      // printf("sche pro :%s ", p->name);
+      // printf("  pid: %d\n", p->pid);
       
-      printf("back to scheduler\n");
+      // printf("return addr i: %x  ", sche_return_addr_v);
+      // printf("return addr: %x  ", p->context->cp0_epc);
+      // printf("tf : v0 %d   proc sp: %x \n", p->context->regs[2], p->context->regs[29]);
 
-      //这里要考察进程是否已经销毁
-      p->state = RUNNABLE;
+      from_sche = 1;
+      sche_return_addr_v = *(u_int*)(p->context->cp0_epc);
+      // u_int* add = (u_int*)(p->context->cp0_epc);
+      
+      // for (;add < p->context->cp0_epc + 20;add++) {
+      //   printf("%x %x \n", add, *add);
+      // }
+
+      
+      // if (p->sz > 4096) sche_return_addr_v = *(u_int*)(0x00001000);
+      
+      //保存调度器上下文 scheduler_tf 加载进程tf
+      release(&ptable.lock);
+      if (p->laststate == SLEEPING) {
+        p->laststate = RUNNABLE;
+        sche2wake();
+      }
+      else {
+        p->laststate = RUNNABLE;
+        swtchk2u(&scheduler_tf, p->context, p->context->cp0_epc);
+      }
+      acquire(&ptable.lock);
+      //printf("back to scheduler\n");
+
       //再次切回核心进程(切回之前要变更状态)
       switchkvm();
       curproc = 0;
@@ -214,6 +257,8 @@ scheduler(void)
 int
 fork(void)
 {
+  printf("start to fork: cur pid:%d  ", curproc->pid);
+  printf("from:%x  ra:%x\n", curproc->tf->cp0_epc, curproc->tf->regs[31]);
   int i, pid;
   struct proc *np;
 
@@ -232,9 +277,20 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+  *np->context = *curproc->tf;
+  np->context->cp0_epc += 4;
+
+  //debug
+  
+  extern char* child_proc_return_add;
+  //v1保存子进程返回位置
+  //np->context->cp0_epc = child_proc_return_add;
+  //np->tf->regs[3] = np->tf->cp0_epc;
+  
 
   // Clear v0 so that fork returns 0 in the child.
   np->tf->regs[2] = 0;
+  np->context->regs[2] = 0;
 
   //复制文件打开表
   for(i = 0; i < NOFILE; i++)
@@ -243,9 +299,144 @@ fork(void)
   
   //cwd分配目录的机制暂未考虑
   //np->cwd = idup(curproc->cwd);
+  safestrcpy(np->cwd, curproc->cwd, CWDPATH_MAX);
  
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+  printf("fnish fork  new pid:%d \n", np->pid);
   return pid;
+}
+
+//关闭打开文件，唤醒父进程，移交子进程
+//然后进入调度器
+//父进程wait()释放资源
+void
+exit(void)
+{
+  struct proc *p;
+  int fd;
+
+  if(curproc == initproc)
+    panic("init exiting");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
+      fileclose(curproc->ofile[fd]);
+      curproc->ofile[fd] = 0;
+    }
+  }
+
+  //暂未实现cwd
+  // proc->cwd = 0;
+
+  acquire(&ptable.lock);
+
+  // Parent might be sleeping in wait().
+  wakeup(curproc->parent);
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup(initproc);
+    }
+  }
+
+  // 回到调度器
+  curproc->state = ZOMBIE;
+  release(&ptable.lock);
+  back2sche();
+  //sched();
+  panic("zombie exit");
+}
+
+
+// Wake up  
+void
+wakeup(struct proc *p)
+{
+  if(p->state == SLEEPING)
+    p->state = RUNNABLE;
+}
+
+//等待子进程结束 然后回收资源
+int
+wait(void)
+{
+  struct proc *p;
+  int havekids, pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for zombie children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  
+    // sleep(proc, &ptable.lock);  //DOC: wait-sleep
+    sleep(curproc);
+  }
+}
+
+
+//简化版本睡眠
+//等待被唤醒
+//sleep调用之前需上锁
+void
+sleep(struct proc *p)
+{
+  if(p == 0)
+    panic("sleep");
+
+  p->state = SLEEPING;
+  p->laststate = SLEEPING;
+
+  release(&ptable.lock);
+  back2sche();
+}
+
+
+int
+growproc(int n)
+{
+  u_int sz;
+  
+  sz = curproc->sz;
+
+  if(n > 0){
+    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      return -1;
+  } else if(n < 0){
+    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      return -1;
+  }
+  curproc->sz = sz;
+  return 0;
 }

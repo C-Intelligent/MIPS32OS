@@ -9,6 +9,12 @@
         "ff.h": "c",
         "mfp_io.h": "c",
         "user.h": "c",
-        "file.h": "c"
+        "file.h": "c",
+        "*.cp": "c",
+        "mips32.h": "c",
+        "cstdio": "c",
+        "*.tcc": "c",
+        "string.h": "c",
+        "limits": "c"
     }
 }

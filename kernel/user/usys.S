@@ -38,19 +38,93 @@ LEAF(fork)
     nop
 END(fork)
 
+LEAF(exit)
+    li	v0, SYS_exit
+    syscall
+    jr	ra
+    nop
+END(exit)
+
+LEAF(wait)
+    li	v0, SYS_wait
+    syscall
+    jr	ra
+    nop
+END(wait)
+
+LEAF(read)
+    li	v0, SYS_read
+    syscall
+    jr	ra
+    nop
+END(read)
+
+LEAF(uname)
+    li	v0, SYS_uname
+    syscall
+    jr	ra
+    nop
+END(uname)
+
+LEAF(pwd)
+    li	v0, SYS_pwd
+    syscall
+    jr	ra
+    nop
+END(pwd)
+
+LEAF(chdir)
+    li	v0, SYS_chdir
+    syscall
+    jr	ra
+    nop
+END(chdir)
+
+LEAF(pipe)
+    li	v0, SYS_pipe
+    syscall
+    jr	ra
+    nop
+END(pipe)
+
+LEAF(close)
+    li	v0, SYS_close
+    syscall
+    jr	ra
+    nop
+END(close)
+
+LEAF(sbrk)
+    li	v0, SYS_sbrk
+    syscall
+    jr	ra
+    nop
+END(sbrk)
 
 
-LEAF(usys)
+LEAF(pause)
+here_pause:
+    nop
+    nop
+    j here_pause
+    nop
+    nop
+END(pause)
 
-sw	a0,0(sp)
-sw	a1,4(sp)
-sw	a2,8(sp)
-sw	a3,12(sp)
-move	v0, a0
 
-syscall
+/*
+LEAF(safebytecpy)
+    addiu sp, sp, -24
+    sw ra, (sp)
+    sw t1, 4(sp)
 
-jr	ra
-nop
-
-END(usys)
+    //a0 addr  a1  byte
+    li t1, 0x0000
+    lw t1, ()
+    lw t1, 4(sp)
+    lw ra, (sp)
+    addiu sp, sp, 24
+    jr	ra
+    nop
+END(safebytecpy)
+*/

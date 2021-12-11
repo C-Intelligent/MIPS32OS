@@ -6,18 +6,26 @@
 #include "../inc/mmu.h"
 #include "../inc/string.h"
 #include "../inc/mips/mips32.h"
+#include "../inc/file.h"
+
+u_int after_exec = 0;
+extern struct proc *curproc;
 
 int
 exec(char *path, int argc, char **argv)
 {
     // printf("exec! path add: %x  argc:%x   argv:%x \n", path, argc, argv);
+    printf("exec : %s\n", path);
     char *s, *last;
 
-    u_int sz, sp, ustack[3+MAXARG+1];
+    u_int sz, sp;
+    u_int ustack[3+MAXARG+1];
 
     pde_t *pgdir, *oldpgdir;
 
     pgdir = 0;
+
+    // printf("stdout file: %x, writable:%x\n", curproc->ofile[STDOUT], curproc->ofile[STDOUT]->writable);
 
     //elf文件解析
     char* buffer = kalloc();
@@ -38,13 +46,19 @@ exec(char *path, int argc, char **argv)
     FILINFO stat;
     f_stat(path, &stat);
     //文件太小也会错误
-    if(stat.fsize <= sizeof(Elf32_Ehdr))
+    if(stat.fsize <= sizeof(Elf32_Ehdr)) {
+        printf("fsize too small\n");
         goto bad;
+    }
+        
 
     //文件头
     f_read(fp, Elf_header, sizeof(Elf32_Ehdr), &br);
-    if(!IS_ELF32(*Elf_header))
+    if(!IS_ELF32(*Elf_header)) {
+        printf("not a elf file\n");
         goto bad;
+    }
+        
     
     Elf32_Phdr *Pro_header = (Elf32_Phdr *)ptr;
     ptr += Elf_header->e_phnum * sizeof(Elf32_Phdr);
@@ -53,12 +67,18 @@ exec(char *path, int argc, char **argv)
     printf("[load_elf] pro_header num :%u\n", phnum);
     br = 0;
     f_read(fp, Pro_header, Elf_header->e_phnum * sizeof(Elf32_Phdr), &br);
-    if(stat.fsize < Elf_header->e_phoff + Elf_header->e_phnum*sizeof(Elf32_Phdr))
+    if(stat.fsize < Elf_header->e_phoff + Elf_header->e_phnum*sizeof(Elf32_Phdr)) {
+        printf("fsize smaller than e_phoff + e_phnum\n");
         goto bad;
+    }
+        
 
     //设置新页表
-    if((pgdir = setupkpg_t()) == 0)
+    if((pgdir = setupkpg_t()) == 0) {
+        printf("fail to setupkpg_t\n");
         goto bad;
+    }
+        
 
     sz = 0;//准备分配物理页框
 
@@ -92,9 +112,12 @@ exec(char *path, int argc, char **argv)
     }
 
     res = f_close(fp);
+    sz = PGROUNDUP(sz);
+
+    //程序的页数必须为偶数
+    if (sz % (2*PGSIZE)) sz += PGSIZE;
 
     //再分配两页 一页作为隔离(无法访问) 一页做栈
-    sz = PGROUNDUP(sz);
     if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
         goto bad;
     clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
@@ -105,14 +128,17 @@ exec(char *path, int argc, char **argv)
     for(argc__ = 0; argc__ < argc; argc__++) {
         if(argc__ >= MAXARG)
             goto bad;
+
         sp = (sp - (strlen(argv[argc__]) + 1)) & ~3;
 
+        
         if(copyout(pgdir, sp, argv[argc__], strlen(argv[argc__]) + 1) < 0)
             goto bad;
 
-        ustack[3+argc] = sp;
+        // printf("[exec..] argv copy addr: %x\n", sp);
+        ustack[3+argc__] = sp;
     }
-    ustack[3+argc] = 0;
+    ustack[3+argc__] = 0;
 
     ustack[0] = 0xffffffff;  // fake return PC
     ustack[1] = argc;
@@ -122,12 +148,17 @@ exec(char *path, int argc, char **argv)
     if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
         goto bad;
 
+    //设置参数
+    curproc->tf->regs[4] = argc; //a0
+    curproc->tf->regs[5] = ustack[2];
+    // printf("argc: %d   argv: %x\n", argc, ustack[2]);
+
     // Save program name for debugging.
     for(last=s=path; *s; s++)
     if(*s == '/')
         last = s+1;
 
-    extern struct proc *curproc;
+    
     safestrcpy(curproc->name, last, sizeof(curproc->name));
 
     // Commit
@@ -158,11 +189,13 @@ exec(char *path, int argc, char **argv)
 
     kfree(buffer);
     printf("finish exec!\n");
+    after_exec = 1;
 
     return 0;
 
     bad:
     printf("bad exec\n");
     if(pgdir) freevm(pgdir);
+    after_exec = 0;
     return -1;
 }

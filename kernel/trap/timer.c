@@ -68,7 +68,7 @@ void timer_init() {
     set_TCSR0(0);
     //set_exl();
     // set_timing_interval_s(1);
-    set_timing_interval_ms(1000);//中断时间
+    set_timing_interval_ms(100);//中断时间
     set_TCSR0(
         TIMER_TCSR0_ENIT0 |
         TIMER_TCSR0_ARHT0 |

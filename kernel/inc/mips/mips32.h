@@ -1,12 +1,8 @@
 #pragma once
 #include "../types.h"
 
-static inline u_int
-_mips_atomic_xchg(volatile u_int *addr, u_int newval)
-{
-  asm volatile("ll $t0, 0($a0); sc $t0, 0($a1); addiu $v0, $t0, 0;" \
-                : : :);
-}
+u_int _mips_atomic_xchg(volatile u_int *addr, u_int newval);
+
 
 //CP0_STATUS $12  STATUS_CU0 0x10000000  (STATUS_CU0 | 0x1)
 static inline void

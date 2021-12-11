@@ -58,3 +58,17 @@ memmove(void *dst, const void *src, u_int n)
 
   return dst;
 }
+
+char*
+safebytecpy(u_int addr, const char b) 
+{
+  u_int addr1 = addr & 0xfffffffc;
+  u_int addr2 = addr & ~0xfffffffc;
+  u_int v = *(u_int*)addr1;
+  u_int mask = 0x000000ff;
+  mask = mask << (8 * addr2);
+  v = v & (~mask);
+  u_int byte = (u_int)b;
+  byte = byte << (8 * addr2);
+  *(u_int*)addr1 = v | byte;
+}

@@ -4,9 +4,25 @@
 #include "../inc/trap.h"
 
 .set noreorder
+
+
+LEAF(change_entryhi)
+    lw k1, curasid
+    mtc0	k1,CP0_ENTRYHI
+    jr ra
+    nop
+END(change_entryhi)
+
 //void  swtch(struct trapframe* save_to, struct trapframe * to_load);
 LEAF(swtchk2u)
     .set at
+
+    //重填tlb
+    /*
+    lui k0, 1
+    sw k0, from_sche
+    lw k0, (a2)
+    */
 
     sw		sp, kernel_sp
 
@@ -20,6 +36,10 @@ LEAF(swtchk2u)
     SAVE_TF
     lw	k0, kernel_sp
     sw	k0,TF_REG29(sp)
+
+    //更新entryhi(ASID)   =>> 放在前面更新
+    //lw k1, curasid
+    //mtc0	k1,CP0_ENTRYHI
 
     //清除时间片并且开中断
     lw sp, kernel_sp
@@ -86,3 +106,51 @@ LEAF(swtchk2u)
 	nop
 
 END(swtchk2u)
+
+
+//睡眠
+//回到调度器
+LEAF(back2sche)
+    //mfc0 k0, CP0_EPC
+    sw sp, tmp_sp
+
+    lw sp, cur_context
+    
+    addiu	sp,sp, TF_SIZE //SAVE_TF中还要再减
+    SAVE_TF
+    lw k0, tmp_sp
+    sw	k0,TF_REG29(sp)
+
+    lw sp, scheduler_tf_ptr
+    RESTORE_TF
+
+    //更新entryhi(ASID)
+    mtc0	zero,CP0_ENTRYHI
+
+    nop
+    jr ra
+	nop
+
+END(back2sche)
+
+//唤醒
+LEAF(sche2wake)
+    //mfc0 k0, CP0_EPC
+    sw sp, tmp_sp
+
+    lw sp, scheduler_tf_ptr
+    
+    addiu	sp,sp, TF_SIZE //SAVE_TF中还要再减
+    SAVE_TF
+    lw k0, tmp_sp
+    sw	k0,TF_REG29(sp)
+
+    lw sp, cur_context
+    RESTORE_TF
+
+    nop
+    jr ra
+	nop
+
+END(sche2wake)
+

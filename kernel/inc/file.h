@@ -9,10 +9,8 @@ struct file{
   int ref; // reference count
   char readable;
   char writable;
-  //pipe暂时未实现
-//   struct pipe *pipe;
+  struct pipe *pipe;
   FIL* fp;
-//   struct inode *ip;
   u_int off;
 };
 

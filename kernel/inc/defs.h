@@ -7,25 +7,19 @@ int             exec(char*, int, char**);
 
 // file.c
 void fs_init();
-struct file*    get_std_out_f();
-// struct file*    filealloc(void);
-// void            fileclose(struct file*);
+struct file*    get_std_out_f(); 
+struct file*    get_std_in_f();
+struct file*    filealloc(void);
+void            fileclose(struct file*);
 struct file*    filedup(struct file*);
 // void            fileinit(void);
-// int             fileread(struct file*, char*, int n);
 // int             filestat(struct file*, struct _m_stat*);
 int             filewrite(struct file*, char*, int n);
+int             fileread(struct file*, char*, int n);
 
-
-// ide.c
-// void            ideinit(void);
-// void            ideintr(void);
-// void            iderw(struct buf*);
-
-// ioapic.c
-// void            ioapicenable(int irq, int cpu);
-// extern u_char    ioapicid;
-// void            ioapicinit(void);
+int chdir(const char *path);
+void pwd();
+void ls();
 
 // kalloc.c
 char*           kalloc(void);
@@ -33,55 +27,28 @@ void            kfree(char*);
 void            phys_page_allocator_init(void*, void*);
 
 
-// kbd.c
-// void            kbdintr(void);
-
-// lapic.c
-// int             cpunum(void);
-// extern volatile u_int*    lapic;
-// void            lapiceoi(void);
-// void            lapicinit(void);
-// void            lapicstartap(u_char, u_int);
-// void            microdelay(int);
-
-// log.c
-// void            initlog(void);
-// void            log_write(struct buf*);
-// void            begin_trans();
-// void            commit_trans();
-
-// mp.c
-// extern int      ismp;
-// int             mpbcpu(void);
-// void            mpinit(void);
-// void            mpstartthem(void);
-
-// picirq.c
-// void            picenable(int);
-// void            picinit(void);
 
 // pipe.c
-// int             pipealloc(struct file**, struct file**);
-// void            pipeclose(struct pipe*, int);
-// int             piperead(struct pipe*, char*, int);
-// int             pipewrite(struct pipe*, char*, int);
+int             pipealloc(struct file**, struct file**);
+void            pipeclose(struct pipe*, int);
+int             piperead(struct pipe*, char*, int);
+int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
+void lock_ptable();
 struct proc*    copyproc(struct proc*);
-// void            exit(void);
+void            exit(void);
 int             fork(void);
 int             growproc(int);
-int             kill(int);
+// int             kill(int);
 void            process_init(void);  //进程初始化
-void            procdump(void);
+// void            procdump(void);
 void            scheduler(void) __attribute__((noreturn)); //调度器
-void            sched(void);
-// void            sleep(void*, struct spinlock*);
+void sleep(struct proc *p);
 void            userinit(void);
 int             wait(void);
-void            wakeup(void*);
-void            yield(void);
+void wakeup(struct proc *p);
 
 // swtch.S
 void            swtch(struct trapframe* save_to, struct trapframe * to_load);
@@ -104,14 +71,12 @@ void            timer_init(void);
 // trap.c
 void trap_init();
 
-void            idtinit(void);
-extern u_int     ticks;
-void            tvinit(void);
+
 extern struct spinlock tickslock;
 
 // vm.c
 u_int           searchPN(void* addr);
-void            allocate8KB(u_int *entryHi, u_int *pa);
+void allocate8KB(u_int *bada, u_int *arr, u_int epc);
 // void            seginit(void);
 void            init_kpg_table(void); //为核心创建页表
 // void            vmenable(void);

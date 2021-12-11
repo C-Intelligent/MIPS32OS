@@ -38,11 +38,20 @@ back2here:
     move a0, sp
 
     //恢复sp
-    lw sp, kernel_sp
+    //lw sp, kernel_sp  这里弃用共同使用核心栈的方式 改为使用用户内核栈
+    //注：内核栈的销毁时机为
+    //偏移为 12
+    lw k0, curproc
+    lw sp, 12(k0)
 
     //注意！！系统调用不能和调度器共同使用核心栈! 否则会出现数据覆盖的错误!
     nop
     jal SystemCall
+    nop
+
+    lw k0, after_exec
+    nop
+    bnez k0, exec_return_add
     nop
 
     
@@ -64,10 +73,68 @@ back2here:
     mfc0	k0,CP0_EPC
     move v1, k0
 
+    //返回前确保填入tlb 现在的sp是用户sp
+    //
+
     STI
     
     nop
     jr v1
 	nop
 
+    //exec特殊处理
+exec_return_add:
+    sw zero, after_exec
+    //恢复快照
+    lw sp, curtf
+    RESTORE_TF
+    nop
+
+    //更新entryhi(ASID)
+    lw k1, curasid
+    mtc0	k1,CP0_ENTRYHI
+
+    //主动进入时钟
+    mfc0 k1, CP0_STATUS
+    or k1, k1, 0x2
+    mtc0 k1, CP0_STATUS
+    //la k0, sys_exec_back_add
+    mtc0 v1, CP0_EPC
+    //la k0, 
+    nop
+    j handle_int
+    nop 
+
+
+sys_exec_back_add:
+
+
+    
+    
+    nop
+    jr v1
+	nop
+
+
+    //子进程返回位置
+.global child_proc_return_add
+child_proc_return_add:
+    //恢复快照
+    lw sp, curtf
+    RESTORE_TF
+    nop
+
+    //更新entryhi(ASID)
+    lw k1, curasid
+    mtc0	k1,CP0_ENTRYHI
+
+    STI
+    
+    nop
+    jr v1
+	nop
+
+
 END(handle_sys)
+
+

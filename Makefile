@@ -32,7 +32,7 @@ LIBS := 	$(user_dir)/*.o	 		  \
 			# $(proc_dir)/*.o \
 			
 
-APPS := console
+APPS := console bash help
 			
 
 

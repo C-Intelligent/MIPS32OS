@@ -73,6 +73,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // be page-aligned.
 // 在页表中建立一段虚拟内存到一段物理内存的映射
 //警告：若不对齐可能会产生严重错误
+//警告：若配合kalloc使用，一次只能分配一页，否则会产生严重错误
 static int
 mappages(pde_t *pgdir, void *va, u_int size, u_int pa, int perm)
 {
@@ -124,7 +125,9 @@ switchkvm(void)
 //   lcr3(v2p(kpgdir));   // switch to the kernel page table
 }
 
-// Switch TSS and h/w page table to correspond to process p.
+extern void change_entryhi();
+
+// Switch page table to process p.
 void
 switchuvm(struct proc *p)
 {
@@ -140,6 +143,9 @@ switchuvm(struct proc *p)
 
   curpgdir = p->pgdir;
   curasid = p->asid;
+
+  change_entryhi();
+
   //printf("curpgdir:%x\n", curpgdir);
   popcli();
 }
@@ -151,35 +157,58 @@ inituvm(pde_t *pgdir, char *init, u_int sz)
 {
   char *mem;
   
-  if(sz >= PGSIZE)
+  if(sz +  0x100 >= PGSIZE)
     panic("inituvm: more than a page");
   mem = kalloc();
+  //kfree(mem);
+  // mem = kalloc();
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, (u_int)mem, PTE_W|PTE_U);
-  memmove(mem, init, sz);
+  memmove(mem + 0x100, init, sz);
+  
+  u_int* add = mem;
+  
+  // for (;add < mem + 25;add++) {
+  //   printf("%x  %x\n", add, *add);
+  // }
+  
 }
 
 
 
 //由于tlb每次重填两项 故需确认页表填好对应项
-void allocate8KB(u_int *entryHi, u_int *arr) {
+void allocate8KB(u_int *bada, u_int *arr, u_int epc) {
+  u_int entryHi = (u_int)bada & 0xffffe000;
+
   pte_t *pte = walkpgdir(curpgdir, entryHi, 1); //找到条目
   u_int pa = *pte;
   if (pa == 0) {
     pa = (u_int)kalloc();
-    mappages(curpgdir, entryHi, PGSIZE, pa, PTE_W|PTE_U);
+    mappages(curpgdir, (u_int*)entryHi, PGSIZE, pa, PTE_W|PTE_U);
   }
   pa = pa & 0xfffff000;
   arr[0] = pa - 0x80000000;
-  pte = walkpgdir(curpgdir, entryHi + PGSIZE, 1); //找到条目
+  
+  entryHi += PGSIZE;
+
+  pte = walkpgdir(curpgdir, entryHi, 1); //找到条目
   pa = *pte;
   if (pa == 0) {
     pa = (u_int)kalloc();
-    mappages(curpgdir, entryHi + PGSIZE, PGSIZE, pa, PTE_W|PTE_U);
+    mappages(curpgdir, (u_int *)entryHi, PGSIZE, pa, PTE_W|PTE_U);
   }
   pa = pa & 0xfffff000;
   arr[1] = pa - 0x80000000; 
+  printf("bada: %x  epc: %x pa0 %x   pa1  %x\n", bada, epc, arr[0], arr[1]);
+  /*
+  printf("entryHi: %x  pa0 %x   pa1%x\n", entryHi, arr[0], arr[1]);
+  u_int* add = (u_int*)((u_int)arr[0] + 0x80000000);
+  for (;add < ((u_int)arr[0] + 0x80000000 + 40);add++) {
+    printf("%x  %x\n", add, *add);
+  }
+  */
 }
+
 
 //@已弃用
 //查找虚拟地址对应的物理页号
@@ -224,9 +253,11 @@ loaduvm(pde_t *pgdir, char *addr, FIL *fp, u_int offset, u_int sz)
     panic("loaduvm: addr must be page aligned");
 
   for(i = 0; i < sz; i += PGSIZE){
+    
     if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
       panic("loaduvm: address should exist");
     pa = PTE_ADDR(*pte); //物理页框首地址
+    printf("[loaduvm] va: %x pa: => %x\n", addr+i , pa);
     if(sz - i < PGSIZE)
       n = sz - i;
     else
@@ -263,6 +294,7 @@ allocuvm(pde_t *pgdir, u_int oldsz, u_int newsz)
       return 0;
     }
     // memset(mem, 0, PGSIZE);
+    printf("[allocuvm]  va: %x => pa: %x\n", a, mem);
     mappages(pgdir, (void*)a, PGSIZE, (u_int)mem, PTE_W|PTE_U);
   }
   return newsz;
@@ -330,7 +362,7 @@ uva2ka(pde_t *pgdir, char *uva)
     return 0;
   if((*pte & PTE_U) == 0)
     return 0;
-  return (char*)(*pte);
+  return (char*)(*pte & ~0xfff);
 }
 
 //释放虚拟空间
