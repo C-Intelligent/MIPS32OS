@@ -67,7 +67,7 @@ free(void *ap)
 Header*
 morecore(u_int nu)
 {
-  printf("morecore: %u\n", nu);
+  //printf("morecore: %u\n", nu);
   char *p;
   Header *hp;
 
@@ -84,7 +84,7 @@ morecore(u_int nu)
   hp->s.size = nu;
   //挂到链上
   free((void*)(hp + 1));
-  printf("end morecore\n");
+  // printf("end morecore\n");
   return freep;
 }
 
@@ -120,7 +120,7 @@ malloc(u_int nbytes)
       //链头停留在上次分配的位置
       freep = prevp;
       //摘除适配块的尾部分配给用户
-      printf("malloc match: %x\n", (void*)(p + 1));
+      // printf("malloc match: %x\n", (void*)(p + 1));
       return (void*)(p + 1);
     }
     //回到链头 无合适大小的块  新申请

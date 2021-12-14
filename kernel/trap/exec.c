@@ -15,7 +15,7 @@ int
 exec(char *path, int argc, char **argv)
 {
     // printf("exec! path add: %x  argc:%x   argv:%x \n", path, argc, argv);
-    printf("exec : %s\n", path);
+    // printf("exec : %s\n", path);
     char *s, *last;
 
     u_int sz, sp;
@@ -39,12 +39,26 @@ exec(char *path, int argc, char **argv)
     FIL *fp = (FIL *)ptr;
     ptr += sizeof(FIL);
 
-    FRESULT res = f_open(fp, path, FA_READ);
+    char fpath[128];
+    safestrcpy(fpath, path, sizeof(fpath));
+    FRESULT res = f_open(fp, fpath, FA_READ);
+    //如果本地找不到  再到bin中找
+    if (FR_OK != res) {
+        //printf("res state:%d\n", res);
+        safestrcpy(fpath, "0:/bin/", 8);
+        safestrcpy(&fpath[7], path, sizeof(fpath) - 8);
+        // printf("file: %s\n", fpath);
+        res = f_open(fp, fpath, FA_READ);
+        if (FR_OK != res) {
+            printf("cannot find file: %s\n", fpath);
+            goto bad;
+        }
+    }
     uint32_t br = 0;
 
     /*文件大小*/
     FILINFO stat;
-    f_stat(path, &stat);
+    f_stat(fpath, &stat);
     //文件太小也会错误
     if(stat.fsize <= sizeof(Elf32_Ehdr)) {
         printf("fsize too small\n");
@@ -64,7 +78,7 @@ exec(char *path, int argc, char **argv)
     ptr += Elf_header->e_phnum * sizeof(Elf32_Phdr);
     //程序头
     u_int phnum = Elf_header->e_phnum;
-    printf("[load_elf] pro_header num :%u\n", phnum);
+    //printf("[load_elf] pro_header num :%u\n", phnum);
     br = 0;
     f_read(fp, Pro_header, Elf_header->e_phnum * sizeof(Elf32_Phdr), &br);
     if(stat.fsize < Elf_header->e_phoff + Elf_header->e_phnum*sizeof(Elf32_Phdr)) {
@@ -86,16 +100,16 @@ exec(char *path, int argc, char **argv)
     u_int i;
     for(i = 0; i < Elf_header->e_phnum; i++) {
         if(Pro_header[i].p_type == PT_LOAD && Pro_header[i].p_memsz) { 
-            printf("[load_elf] still alive ... writing %d bytes to pa:", Pro_header[i].p_filesz);
-            printf("%x va:%x\n\r", Pro_header[i].p_paddr, Pro_header[i].p_vaddr);
+            // printf("[load_elf] still alive ... writing %d bytes to pa:", Pro_header[i].p_filesz);
+            // printf("%x va:%x\n\r", Pro_header[i].p_paddr, Pro_header[i].p_vaddr);
             /* 此段大小大于0且需要加载 */
 
             if(Pro_header[i].p_filesz) {                         /* has data */
                 if(stat.fsize < Pro_header[i].p_offset + Pro_header[i].p_filesz)
                     goto bad;
 
-                printf("[load_elf] pro size:%u  mem size: %u\n", Pro_header[i].p_filesz, Pro_header[i].p_memsz);
-                printf("[load_elf] pro offset:%u\n", Pro_header[i].p_offset);
+                // printf("[load_elf] pro size:%u  mem size: %u\n", Pro_header[i].p_filesz, Pro_header[i].p_memsz);
+                // printf("[load_elf] pro offset:%u\n", Pro_header[i].p_offset);
                 //分配内存 load  sz:old_size
                 if((sz = allocuvm(pgdir, sz, Pro_header[i].p_vaddr + Pro_header[i].p_memsz)) == 0)
                     goto bad;
@@ -179,7 +193,7 @@ exec(char *path, int argc, char **argv)
     curproc->tf->cp0_epc = Elf_header->e_entry;
     //返回地址放在v1
     curproc->tf->regs[3] = Elf_header->e_entry;
-    printf("pro entry: %x\n", Elf_header->e_entry);
+    //printf("pro entry: %x\n", Elf_header->e_entry);
 
     //要更新entryhi
     // curproc->tf->hi = (Elf_header->e_entry & 0xffffe000) | curproc->asid;
@@ -188,13 +202,14 @@ exec(char *path, int argc, char **argv)
     freevm(oldpgdir);
 
     kfree(buffer);
-    printf("finish exec!\n");
+    //printf("finish exec!\n");
     after_exec = 1;
 
     return 0;
 
     bad:
-    printf("bad exec\n");
+    f_close(fp);
+    //printf("bad exec\n");
     if(pgdir) freevm(pgdir);
     after_exec = 0;
     return -1;

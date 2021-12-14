@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "../drivers/ff.h"
 
 #ifndef NULL
 #define NULL ((void*) 0)
@@ -149,9 +150,36 @@ struct backcmd {
   struct cmd *cmd;
 };
 
-#define O_RDONLY  0x000
-#define O_WRONLY  0x001
-#define O_RDWR    0x002
-#define O_CREATE  0x200
+/*
+                  存在                 不存在
+CREATE_NEW	      ERROR_FILE_EXISTS	  新建
+CREATE_ALWAYS	    截断	               新建
+OPEN_EXISTING	    打开	               ERROR_FILE_NOT_FOUND
+OPEN_ALWAYS	      打开	               新建
+*/
 
+#define READ             0x01
+#define OPEN_EXISTING    0x00
+#define WRITE            0x02
+#define CREATE_NEW       0x04
+#define CREATE_ALWAYS    0x08
+#define OPEN_ALWAYS      0x10
 
+//stat
+#define DIRSIZ 14
+
+// #define T_DIR  1   // Directory
+// #define T_FILE 2   // File
+enum { T_NONE, T_DIR, T_FIL };
+#define PATH_MAX_LENGTH 128
+
+#define CWDPATH_MAX 128
+
+#define PIPESIZE 512
+
+//文件信息
+
+struct stat {
+  int type;
+  FILINFO info;
+};

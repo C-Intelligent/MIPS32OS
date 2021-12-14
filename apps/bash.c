@@ -24,7 +24,7 @@ const char symbols[] = "<|>&;()";
 
 int main(int argc, char* argv) {
     char *str = (char*)malloc(20);
-    safestrcpy(str, "bash start\n", 20);
+    safestrcpy(str, "#== bash start ==#\n", 20);
     printf("%s\n", str);
     start_bash();
     return 0;
@@ -40,7 +40,7 @@ getcmd(char *buf, int nbuf) {
 
     printf("%s:%s# ", name, cwd);
     memset(buf, 0, nbuf);
-    gets(buf, nbuf);
+    cmdgets(buf, nbuf);
     if(buf[0] == 0) // EOF
       return -1;
     return 0;
@@ -55,12 +55,12 @@ execcmd(void)
 {
   struct execcmd *cmd;
   // disheap();
-  printf("execcmd\n");
+  // printf("execcmd\n");
 
   cmd = (struct execcmd *)malloc(sizeof(*cmd));
   memset(cmd, 0, sizeof(*cmd));
   cmd->type = EXEC;
-  printf("end execcmd cmd: %x\n", cmd);
+  // printf("end execcmd cmd: %x\n", cmd);
   return (struct cmd*)cmd;
 }
 
@@ -200,13 +200,13 @@ parseredirs(struct cmd *cmd, char **ps, char *es)
       panic("missing file for redirection");
     switch(tok){
     case '<':
-      cmd = redircmd(cmd, q, eq, O_RDONLY, STDIN);  //STDIN存疑
+      cmd = redircmd(cmd, q, eq, READ, STDIN);  //重定向输入
       break;
     case '>':
-      cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, STDOUT);
+      cmd = redircmd(cmd, q, eq, WRITE|OPEN_ALWAYS, STDOUT); //重定向输出
       break;
     case '+':  // >>
-      cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, STDOUT);
+      cmd = redircmd(cmd, q, eq, WRITE|OPEN_ALWAYS, STDOUT);
       break;
     }
   }
@@ -233,7 +233,7 @@ parseblock(char **ps, char *es)
 //ps 起始位置指针 es 结束位置
 struct cmd*
 parseexec(char **ps, char *es) {
-  printf("parse exec\n");
+  // printf("parse exec\n");
   char *q, *eq;
   int tok, argc;
   struct execcmd *cmd;
@@ -249,9 +249,9 @@ parseexec(char **ps, char *es) {
   argc = 0;
   //若没有重定向 则不会发生改变
   ret = parseredirs(ret, ps, es);
-  printf("after parseredirs\n");
+  // printf("after parseredirs\n");
 
-  //未检测到"|)&;"
+  //未检测到"|)&;"  ps:&s
   while(!peek(ps, es, "|)&;")){
     //无参数 退出
     if((tok=gettoken(ps, es, &q, &eq)) == 0)
@@ -259,7 +259,7 @@ parseexec(char **ps, char *es) {
     if(tok != 'a')
         panic("syntax");
     
-    // printf("parse argv: %s\n", cmd->argv[argc]);
+    // printf("parse  q: %x eq: %x argv: %s\n", q, eq, q);
     cmd->argv[argc] = q;
     cmd->eargv[argc] = eq;
     argc++;
@@ -270,7 +270,7 @@ parseexec(char **ps, char *es) {
   cmd->argc = argc;
   cmd->argv[argc] = 0;
   cmd->eargv[argc] = 0;
-  printf("parseexec end, ret:%x\n", ret);
+  // printf("parseexec end, ret:%x\n", ret);
   return ret;
 }
 
@@ -283,7 +283,7 @@ parsepipe(char **ps, char *es)
   cmd = parseexec(ps, es);
   //检测到管道
   if(peek(ps, es, "|")){
-    gettoken(ps, es, 0, 0);
+    gettoken(ps, es, 0, 0);  //去除 '|'
     cmd = pipecmd(cmd, parsepipe(ps, es));
   }
   return cmd;
@@ -294,7 +294,7 @@ parsepipe(char **ps, char *es)
 struct cmd*
 parseline(char **ps, char *es)
 {
-  printf("start to parse line\n");
+  // printf("start to parse line\n");
   struct cmd *cmd;
   
   cmd = parsepipe(ps, es);
@@ -307,7 +307,7 @@ parseline(char **ps, char *es)
     gettoken(ps, es, 0, 0);
     cmd = listcmd(cmd, parseline(ps, es));
   }
-  printf("parseline end cmd: %x\n", cmd);
+  // printf("parseline end cmd: %x\n", cmd);
   return cmd;
 }
 
@@ -316,7 +316,7 @@ extern void pause();
 struct cmd*
 parsecmd(char *s)
 {
-  printf("start to parse cmd : %s\n", s);
+  // printf("start to parse cmd : %s\n", s);
   char *es;
   struct cmd *cmd;
 
@@ -331,7 +331,7 @@ parsecmd(char *s)
   //获取参数
   nulterminate(cmd);
   //printf("end parse , argv[0]:%s\n", ((struct execcmd*)cmd)->argv[0]);
-  printf("end parse  cmd addr:%x\n", cmd);
+  // printf("end parse  cmd addr:%x\n", cmd);
   return cmd;
 }
 
@@ -352,8 +352,11 @@ nulterminate(struct cmd *cmd)
   case EXEC:
     ecmd = (struct execcmd*)cmd;
     //直接在原串上打上结束符
-    for(i=0; ecmd->argv[i]; i++)
-      *ecmd->eargv[i] = 0;
+    for(i=0; i < ecmd->argc; i++)
+      //*ecmd->eargv[i] = '\0';
+      safebytecpy(ecmd->eargv[i], '\0');
+    // for(i=0; i < ecmd->argc; i++) 
+    //   printf("[nulterminate] argv: %s\n", ecmd->argv[i]);
     break;
 
   case REDIR:
@@ -387,7 +390,7 @@ nulterminate(struct cmd *cmd)
 void
 runcmd(struct cmd *cmd)
 {
-  printf("start to run cmd : %x\n", cmd);
+  // printf("start to run cmd : %x\n", cmd);
   int p[2];
   struct backcmd *bcmd;
   struct execcmd *ecmd;
@@ -400,18 +403,22 @@ runcmd(struct cmd *cmd)
   
   switch(cmd->type){
   default:
-    panic("runcmd");
+    //panic("runcmd");
+    printf("[bash] wrong cmd!");
+    break;
 
   case EXEC:
-    printf("runcmd type EXEC  argv[0]: %x\n", ecmd->argv[0]);
+    // printf("runcmd type EXEC  argv[0]: %x\n", ecmd->argv[0]);
     ecmd = (struct execcmd*)cmd;
+    int i = 0;
+    // for (; i < ecmd->argc; i++) printf("[runcmd-argv] %s\n", ecmd->argv[i]);
     if(ecmd->argv[0] == 0)
       exit();
     exec(ecmd->argv[0], ecmd->argc, ecmd->argv);
 
-    printf("exec %s failed\n", ecmd->argv[0]);
+    // printf("exec %s failed\n", ecmd->argv[0]);
     break;
-  /*
+  
   case REDIR:
     rcmd = (struct redircmd*)cmd;
     close(rcmd->fd);
@@ -419,9 +426,9 @@ runcmd(struct cmd *cmd)
       printf("open %s failed\n", rcmd->file);
       exit();
     }
+    //exec不替换文件打开信息
     runcmd(rcmd->cmd);
     break;
-
   case LIST:
     lcmd = (struct listcmd*)cmd;
     if(fork() == 0)
@@ -429,23 +436,28 @@ runcmd(struct cmd *cmd)
     wait();
     runcmd(lcmd->right);
     break;
-
   case PIPE:
+  //左出右进
     pcmd = (struct pipecmd*)cmd;
     if(pipe(p) < 0)
       panic("pipe");
+
     if(fork() == 0){
-      close(1);
+      //子进程1
+      close(STDOUT);
       dup(p[1]);
       close(p[0]);
       close(p[1]);
       runcmd(pcmd->left);
     }
     if(fork() == 0){
-      close(0);
+      //子进程2
+      close(STDIN);
       dup(p[0]);
       close(p[0]);
       close(p[1]);
+      //停顿以防止fat32运行出错
+      sleep(20);
       runcmd(pcmd->right);
     }
     close(p[0]);
@@ -453,13 +465,11 @@ runcmd(struct cmd *cmd)
     wait();
     wait();
     break;
-    
   case BACK:
     bcmd = (struct backcmd*)cmd;
     if(fork() == 0)
       runcmd(bcmd->cmd);
     break;
-  */
   }
   exit();
 }
@@ -468,26 +478,31 @@ runcmd(struct cmd *cmd)
 void start_bash() {
     static char buf[100];
 //   Read and run input commands.
-    while(getcmd(buf, sizeof(buf)) >= 0){
-        if (buf[0] == '\0' || buf[0] == '\n' || buf[0] == '\r') continue;
-        if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
-            //切换目录
-            buf[strlen(buf)-1] = 0;
-            if(chdir(buf+3) != 0) printf("cannot cd %s\n", buf+3);
+    while (1) {
+      while(getcmd(buf, sizeof(buf)) >= 0){
+          if ( buf[0] == '\n' || buf[0] == '\r') continue;
+          if (buf[0] == '\0') {
+            printf("\n");
             continue;
-        }
-        if(buf[0] == 'p' && buf[1] == 'w' && buf[2] == 'd' &&
-            (buf[3] == '\n' || buf[3] == ' ' || buf[3] == '\0' || buf[3] == '\r')){
-            char cwd[128];
-            pwd(cwd, 128);
-            printf("%s\n", cwd);
-            continue;
-        }
-        if(fork() == 0)
-            runcmd(parsecmd(buf));
-        wait();
+          }
+          if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
+              //切换目录
+              buf[strlen(buf)-1] = 0;
+              if(chdir(buf+3) != 0) printf("cannot cd %s\n", buf+3);
+              continue;
+          }
+          if(buf[0] == 'p' && buf[1] == 'w' && buf[2] == 'd' &&
+              (buf[3] == '\n' || buf[3] == ' ' || buf[3] == '\0' || buf[3] == '\r')){
+              char cwd[128];
+              pwd(cwd, 128);
+              printf("%s\n", cwd);
+              continue;
+          }
+          if(fork() == 0)
+              runcmd(parsecmd(buf));
+          wait();
+      }
+      printf("fail to get cmd\n");
     }
-
-    printf("fail to get cmd\n");
     while (1);
 }

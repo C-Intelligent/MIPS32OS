@@ -40,6 +40,14 @@ extern int sys_pwd(char* cwd, int len);
 extern int sys_chdir(const char *path);
 extern int sys_close(int);
 extern int sys_pipe(int*);
+extern int sys_open(char* path, int omode);
+extern int sys_fstat(int fd, struct stat *st);
+extern int sys_dup(int newfd);
+extern int sys_sleep(int t);
+extern int sys_unlink(char*);
+extern int sys_link(char*, char*);
+extern int sys_mkdir(char*);
+extern int sys_disprocs(void);
 extern u_int sys_sbrk(int n);
 
 void
@@ -78,8 +86,32 @@ SystemCall(struct trapframe *tf)
       tf->regs[2] = sys_read(tf->regs[4], tf->regs[5], tf->regs[6]);
       tf->cp0_epc += 4;
       break;
+    case SYS_fstat:
+      tf->regs[2] = sys_fstat(tf->regs[4], tf->regs[5]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_open:
+      tf->regs[2] = sys_open(tf->regs[4], tf->regs[5]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_link:
+      tf->regs[2] = sys_link(tf->regs[4], tf->regs[5]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_unlink:
+      tf->regs[2] = sys_unlink(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_mkdir:
+      tf->regs[2] = sys_mkdir(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
     case SYS_pipe:
       tf->regs[2] = sys_pipe(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_dup:
+      tf->regs[2] = sys_dup(tf->regs[4]);
       tf->cp0_epc += 4;
       break;
     case SYS_close:
@@ -90,6 +122,13 @@ SystemCall(struct trapframe *tf)
       tf->regs[2] = sys_sbrk(tf->regs[4]);
       tf->cp0_epc += 4;
       break;
+    case SYS_sleep:
+      tf->regs[2] = sys_sleep(tf->regs[4]);
+      tf->cp0_epc += 4;
+      break;
+    case SYS_disprocs:
+      tf->regs[2] = sys_disprocs();
+      tf->cp0_epc += 4;
     case SYS_fork: 
       tf->regs[2] = sys_fork();
       tf->cp0_epc += 4;
@@ -104,6 +143,7 @@ SystemCall(struct trapframe *tf)
     default: 
       //panic("syscall err");
       printf("syscall err: wrong syscall number\n");
+      tf->cp0_epc += 4;
       break;
   }
 }

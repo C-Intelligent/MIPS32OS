@@ -124,7 +124,7 @@ found:
 
   //设置内核栈栈顶（供系统调用使用）
   p->ksp = (char*)sp;
-  printf("kstack top: %x\n", sp);
+  //printf("kstack top: %x\n", sp);
 
   return p;
 }
@@ -149,7 +149,7 @@ userinit(void)
     panic("userinit: out of memory?");
 
   inituvm(p->pgdir, (char*)uinit, (u_int)(enduinit - uinit)); //初始化代码空间
-  printf("user pgdir:%x\n", p->pgdir);
+  //printf("user pgdir:%x\n", p->pgdir);
 
   p->sz = PGSIZE;
   //memset(p->tf, 0, sizeof(*p->tf));
@@ -183,18 +183,21 @@ userinit(void)
 //      via swtch back to the scheduler.
 u_int sche_return_addr_v;
 u_int from_sche = 0;
+extern u_int rounds;
 
 void
 scheduler(void)
 {
   struct proc *p;
-  printf("scheduler\n");
+  // printf("scheduler\n");
   scheduler_tf_ptr = &scheduler_tf;
   
   for(;;){
     //开中断
     //sti();
     acquire(&ptable.lock);
+    rounds++;
+    wakeup_on_train(&rounds);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -257,8 +260,8 @@ scheduler(void)
 int
 fork(void)
 {
-  printf("start to fork: cur pid:%d  ", curproc->pid);
-  printf("from:%x  ra:%x\n", curproc->tf->cp0_epc, curproc->tf->regs[31]);
+  //printf("start to fork: cur pid:%d  ", curproc->pid);
+  // printf("from:%x  ra:%x\n", curproc->tf->cp0_epc, curproc->tf->regs[31]);
   int i, pid;
   struct proc *np;
 
@@ -304,7 +307,7 @@ fork(void)
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-  printf("fnish fork  new pid:%d \n", np->pid);
+  // printf("fnish fork  new pid:%d \n", np->pid);
   return pid;
 }
 
@@ -422,6 +425,27 @@ sleep(struct proc *p)
   back2sche();
 }
 
+void
+sleep_on_train(void *chan)
+{
+  if(curproc == 0)
+    panic("sleep");
+
+  curproc->state = SLEEPING;
+  curproc->laststate = SLEEPING;
+  curproc->chan = chan;
+
+  release(&ptable.lock);
+  back2sche();
+}
+
+void 
+wakeup_on_train(void *chan) {
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state == SLEEPING && p->chan == chan)
+      p->state = RUNNABLE;
+}
 
 int
 growproc(int n)
@@ -438,5 +462,38 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
+  return 0;
+}
+
+//打印进程信息
+int
+disprocs(void) {
+  struct proc *p;
+  printf("PID   size   STATE\n");
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED) continue;
+    printf("%d     %x", p->pid, p->sz);
+    switch (p->state)
+    {
+    case EMBRYO:
+      printf("   EMBRYO\n");
+      break;
+    case SLEEPING:
+      printf("   SLEEPING\n");
+      break;
+    case RUNNABLE:
+      printf("   RUNNABLE\n");
+      break;
+    case RUNNING:
+      printf("   RUNNING\n");
+      break;
+    case ZOMBIE:
+      printf("   ZOMBIE\n");
+      break;
+    
+    default:
+      break;
+    }
+  }
   return 0;
 }

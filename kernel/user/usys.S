@@ -101,6 +101,62 @@ LEAF(sbrk)
     nop
 END(sbrk)
 
+LEAF(open)
+    li	v0, SYS_open
+    syscall
+    jr	ra
+    nop
+END(open)
+
+LEAF(fstat)
+    li	v0, SYS_fstat
+    syscall
+    jr	ra
+    nop
+END(fstat)
+
+LEAF(dup)
+    li	v0, SYS_dup
+    syscall
+    jr	ra
+    nop
+END(dup)
+
+LEAF(sleep)
+    li	v0, SYS_sleep
+    syscall
+    jr	ra
+    nop
+END(sleep)
+
+LEAF(mkdir)
+    li	v0, SYS_mkdir
+    syscall
+    jr	ra
+    nop
+END(mkdir)
+
+LEAF(unlink)
+    li	v0, SYS_unlink
+    syscall
+    jr	ra
+    nop
+END(unlink)
+
+LEAF(link)
+    li	v0, SYS_link
+    syscall
+    jr	ra
+    nop
+END(link)
+
+LEAF(disprocs)
+    li	v0, SYS_disprocs
+    syscall
+    jr	ra
+    nop
+END(disprocs)
+
 
 LEAF(pause)
 here_pause:

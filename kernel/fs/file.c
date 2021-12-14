@@ -4,12 +4,18 @@
 #include "../inc/defs.h"
 #include "../drivers/ff.h"
 #include "../drivers/console.h"
+#include "../inc/string.h"
 
 //文件打开表
 struct {
   struct spinlock lock;
   struct file file[NFILE];
 } ftable;
+
+//文件打开信息表
+
+filinfo filtable[NFILE];
+struct spinlock fil_t_lock;
 
 struct file _stdin_f_;
 struct file _stdout_f_;
@@ -26,6 +32,35 @@ get_std_in_f() {
   return &_stdin_f_;
 }
 
+//根据路径查询打开文件
+FNODE * 
+namef(const char* path) {
+  int i = 0;
+  for(; i <  NFILE; i++){
+    if(filtable[i].fnode.type != T_NONE
+    && !strcmp(path, (filtable[i].path))){
+      return (FNODE *)&filtable[i];
+    }
+  }
+  return 0;
+}
+
+FNODE *
+fnodealloc(void) {
+  filinfo *fi;
+  int i = 0;
+  acquire(&fil_t_lock);
+  for(; i <  NFILE; i++){
+    if(filtable[i].fnode.type == T_NONE){
+      fi = &filtable[i];
+      release(&fil_t_lock);
+      return (FNODE *)fi;
+    }
+  }
+  release(&fil_t_lock);
+  return 0;
+}
+
 // Allocate a file structure.
 struct file*
 filealloc(void)
@@ -33,8 +68,10 @@ filealloc(void)
   struct file *f;
 
   acquire(&ftable.lock);
-  for(f = ftable.file; f < ftable.file + NFILE; f++){
-    if(f->ref == 0){
+  int i = 0;
+  for(; i <  NFILE; i++){
+    if(ftable.file[i].ref == 0){
+      f = &ftable.file[i];
       f->ref = 1;
       release(&ftable.lock);
       return f;
@@ -50,6 +87,7 @@ filewrite(struct file *f, char *addr, int n)
   // printf("write file: %x, writable: %x\n", f, f->writable);
   int r;
 
+  //文件夹不具有写权限  到这一步过滤掉
   if(f->writable == 0)
     return -1;
   
@@ -64,9 +102,10 @@ filewrite(struct file *f, char *addr, int n)
   if(f->type == FD_FAT){
     
     //暂未考虑读写锁安全问题  后续要加上  lock, unlock
+    //暂未考虑多个进程同时读文件的问题
     FRESULT res;
-    u_int bw = 0;
-    f_write (f->fp, addr, n, &bw);
+    uint32_t bw = 0;
+    f_write ((FIL*)f->fp, addr, n, &bw);
     if (bw > 0) f->off += bw;
     return bw == n ? n : -1;
   }
@@ -85,23 +124,46 @@ fileread(struct file *f, char *addr, int n)
     return piperead(f->pipe, addr, n);
 
   if (f->type == FD_SERIAL) {
+    /*
     int i;
     char c;
     for(i=0; i < n; i++){
       c = (char)getchar();
-      
+      //上 下 左 右 A B C D
+      //回退 127
+      //if (c == '\b') printf("back\n");
+      // printf("\n%d\n", (int)c);
       addr[i] = c;
+      
+      
     }
     return i;
+    */
+    return consoleread(addr, n);
   }
 
   if(f->type == FD_FAT){
-    //暂未考虑读写锁安全问题  后续要加上  lock, unlock
     FRESULT res;
-    u_int br = 0;
-    f_read (f->fp, addr, n, &br);
-    if (br > 0) f->off += br;
-    return br == n ? n : -1;
+    if (f->fp->type == T_FIL) {
+      //暂未考虑读写锁安全问题  后续要加上  lock, unlock
+      //暂未考虑多个进程同时读文件的问题
+
+      uint32_t br;
+
+      res = f_read ((FIL*)f->fp, addr, n, &br);
+      if (br > 0) f->off += br;
+      // return br == n ? n : -1;
+      return br;
+    }
+    if (f->fp->type == T_DIR) {
+      if (n < sizeof(FILINFO)) return -1;
+      res = f_readdir((DIR*)f->fp, (FILINFO *)addr);
+      // printf("[fileread] readdir - name: %s\n", ((FILINFO *)addr)->fname);
+      if(res != FR_OK || ((FILINFO *)addr)->fname[0]==0 )
+        return -1;		// 读取失败或者读取完所有条目
+      return sizeof(FILINFO);
+    }
+    return -1;
   }
   panic("fileread");
 }
@@ -143,7 +205,11 @@ fileclose(struct file *f)
   }
     //pipeclose(ff.pipe, ff.writable);
   else if(ff.type == FD_FAT){
-    f_close(ff.fp);
+    if (ff.fp->type == T_FIL)
+      f_close((FIL*)ff.fp);
+    if (ff.fp->type == T_DIR)
+      f_closedir((DIR*)ff.fp);
+    ff.fp->type = T_NONE;
   }
 }
 
@@ -173,8 +239,25 @@ void fs_init() {
     _stdin_f_.ref = 1;
     _stdin_f_.fp = 0;
     _stdin_f_.off = 0;
+
+    /*初始化文件打开表*/
+    initlock(&ftable.lock, "ftable");
+    initlock(&fil_t_lock, "fnodet");
     
     printf("end fs_init!\n");
+}
+
+void print_startimg() {
+  FIL fp;
+  f_open(&fp, "staimg.txt", FA_READ);
+  char ch;
+  uint32_t br = 0;
+  f_read(&fp, &ch, 1, &br);
+  while (br) {
+    printf("%c", ch);
+    f_read(&fp, &ch, 1, &br);
+  }
+  f_close(&fp);
 }
 
 int chdir(const char *path) {
@@ -212,6 +295,26 @@ void ls() {
   }
   f_closedir(&dp);
   printf("\n");
+}
+
+int
+filestat(struct file *f, struct stat *st)
+{
+  FRESULT res;
+  if(f->type == FD_FAT){
+    if (f->fp->type == T_DIR) {
+      // res = f_readdir((DIR*)f->fp, &st->info);
+      // if (res != FR_OK) return -1;
+      st->type = T_DIR;
+    }
+    else if (f->fp->type == T_FIL) {
+      st->type = T_FIL;
+      res = f_stat(((filinfo*)f->fp)->path, &st->info);
+      if (res != FR_OK) return -1;
+    }
+    return 0;
+  }
+  return -1;
 }
 
 

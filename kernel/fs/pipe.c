@@ -32,8 +32,10 @@ pipealloc(struct file **f0, struct file **f1)
   (*f1)->writable = 1;
   (*f1)->pipe = p;
 
-  p->fa = curproc;
-  p->chi = curproc;
+  p->pw = 0;
+  p->pr = 0;
+
+  // printf("[pipealloc] :%x\n", p);
 
   return 0;
 
@@ -52,15 +54,15 @@ pipealloc(struct file **f0, struct file **f1)
 void
 pipeclose(struct pipe *p, int writable)
 {
+  // printf("pipe close writable: %d\n", writable);
   acquire(&p->lock);
   if(writable){
     p->writeopen = 0;
+    wakeup(p->pr);
   } else {
     p->readopen = 0; 
+    wakeup(p->pw);
   }
-
-  wakeup(p->chi);
-  wakeup(p->fa);
 
   if(p->readopen == 0 && p->writeopen == 0){
     release(&p->lock);
@@ -73,21 +75,8 @@ extern struct proc *curproc;
 int
 pipewrite(struct pipe *p, char *addr, int n)
 {
-  if (p->fa == p->chi) {
-    //初始化 pipe father child
-    if (p->fa != curproc) {
-      //child
-      p->chi = curproc;
-    }
-  }
-
-  struct proc *pr = p->fa, *pw = p->chi;
-  if (p->fa == curproc) {
-    pw = curproc;
-    pr = p->chi;
-  }
-
-  // printf("pipe write: %s\n", addr);
+  p->pw = curproc;
+  // printf("pipe write: %s  pipe-addr:%x\n", addr, p);
   int i;
 
   acquire(&p->lock);
@@ -98,15 +87,15 @@ pipewrite(struct pipe *p, char *addr, int n)
         return -1;
       }
       lock_ptable();
-      wakeup(pr);
+      if (p->pr) wakeup(p->pr);
       release(&p->lock);
       
-      sleep(pw);  //DOC: pipewrite-sleep
+      sleep(curproc);  //DOC: pipewrite-sleep
     }
     p->data[p->nwrite++ % PIPESIZE] = addr[i];
     // safebytecpy(&p->data[p->nwrite++ % PIPESIZE], addr[i]);
   }
-  wakeup(pr);  //DOC: pipewrite-wakeup1
+  if (p->pr) wakeup(p->pr);  //DOC: pipewrite-wakeup1
   release(&p->lock);
   return n;
 }
@@ -114,22 +103,8 @@ pipewrite(struct pipe *p, char *addr, int n)
 int
 piperead(struct pipe *p, char *addr, int n)
 {
-  if (p->fa == p->chi) {
-    //初始化 pipe father child
-    if (p->fa != curproc) {
-      //child
-      p->chi = curproc;
-    }
-  }
-
-  struct proc *pr = p->chi, *pw = p->fa;
-  if (p->fa == curproc) {
-    pw = p->chi;
-    pr = curproc;
-  }
-
   int i;
-  // printf("pipe read:  dst: %x\n", addr);
+  // printf("pipe read:  dst: %x  pipe-addr:%x\n", addr, p);
 
   acquire(&p->lock);
   while(p->nread == p->nwrite && p->writeopen){  //DOC: pipe-empty
@@ -139,15 +114,16 @@ piperead(struct pipe *p, char *addr, int n)
     }
     lock_ptable();
     release(&p->lock);
-    sleep(pr); //DOC: piperead-sleep
+    sleep(curproc); //DOC: piperead-sleep
   }
   for(i = 0; i < n; i++){  //DOC: piperead-copy
     if(p->nread == p->nwrite)
       break;
     // safebytecpy(&addr[i], p->data[p->nread++ % PIPESIZE]);
     addr[i] = p->data[p->nread++ % PIPESIZE];
+    // printf("[piperead]: %c\n", addr[i]);
   }
-  wakeup(pw);  //DOC: piperead-wakeup
+  if (p->pw) wakeup(p->pw);  //DOC: piperead-wakeup
   release(&p->lock);
   return i;
 }

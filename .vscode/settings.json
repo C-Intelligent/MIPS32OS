@@ -15,6 +15,7 @@
         "cstdio": "c",
         "*.tcc": "c",
         "string.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "console.h": "c"
     }
 }

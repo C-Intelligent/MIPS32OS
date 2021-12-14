@@ -54,13 +54,22 @@ j_from_kernel:
     jal clear_timer0_int
     nop
 
-    nop
-    //jal disable_timer0
-    nop
+    //时间片轮数计数
+    //nop
+    //jal round_count
+    //nop
 
-    nop
+    //lw	k0, rounds
+    //addiu	k0,k0,1
+    //sw	k0, rounds
+
+    //nop
+    //jal disable_timer0
+    //nop
+
+    //nop
     //jal timer_work
-    nop
+    //nop
 
     //这里还需给pgtable上锁
 

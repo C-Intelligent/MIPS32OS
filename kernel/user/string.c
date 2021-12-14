@@ -82,28 +82,34 @@ gets(char *buf, int max)
   int i, cc;
   char c;
 
-  int ptr = 0;
-
-  for(i=0; i+1 < max; i++, ptr++){
+  for(i=0; i+1 < max;){
     cc = read(STDIN, &c, 1);
-
-    if (c == '\r') write(STDOUT, "\n", 1);
-    write(STDOUT, &c, 1);
     //怎么设置回退键不能删除的内容?
-    /*
-    if (c != '\b') write(STDOUT, &c, 1);
-    else if (ptr > 0) {
-      write(STDOUT, &c, 1);
-      ptr--;
-    }
-    */
     
     if(cc < 1) break;
-    safebytecpy(&buf[i], c);
+    safebytecpy(&buf[i++], c);
+    if(c == '\r' || c == '\n' || c == '\0')
+      break;
+  }
+  safebytecpy(&buf[i], '\0');
+  return buf;
+}
+
+char*
+cmdgets(char *buf, int max)
+{
+  int i, cc;
+  char c;
+
+  for(i=0; i+1 < max;){
+    cc = read(STDIN, &c, 1);
+    safebytecpy(&buf[i++], c);
+    
+    if(cc < 1) break;
     if(c == '\r' || c == '\n')
       break;
   }
-  safebytecpy(&buf[i + 1], '\0');
+  safebytecpy(&buf[i], '\0');
   return buf;
 }
 

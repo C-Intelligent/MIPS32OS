@@ -13,7 +13,6 @@ LEAF(change_entryhi)
     nop
 END(change_entryhi)
 
-//void  swtch(struct trapframe* save_to, struct trapframe * to_load);
 LEAF(swtchk2u)
     .set at
 

@@ -9,3 +9,5 @@ void cputchar(int c);
 int getchar(void);
 
 void serial_intr(void);
+
+int consoleread(char *dst, int n);

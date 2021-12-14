@@ -7,7 +7,7 @@ void exec_test(int argc, char **argv);
 void malloc_test();
 
 int main(int argc, char **argv) {
-    printf("console main\n");
+    // printf("console main\n");
     
     exec("/bin/bash", 0, 0);
     while (1);

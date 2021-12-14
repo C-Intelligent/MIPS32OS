@@ -1,17 +1,26 @@
 #include "../inc/defs.h"
+#include "../inc/printf.h"
+
+u_int rounds;
 
 extern unsigned long exception_handlers[];
 extern void handle_int();
-// extern void handle_reserved();
+void handle_reserved();
 extern void handle_tlb();
 extern void handle_sys();
 // extern void handle_mod();
 
 void *set_except_vector(int n, void *addr);
 
+void round_count() {
+    rounds++;
+    wakeup_on_train(&rounds);
+}
+
 void trap_init()
 {
     int i;
+    rounds = 0;//时间片轮数
 
     for (i = 0; i < 32; i++) {
         // set_except_vector(i, handle_reserved);
@@ -33,6 +42,11 @@ void *set_except_vector(int n, void *addr)
     unsigned long old_handler = exception_handlers[n];
     exception_handlers[n] = handler;
     return (void *)old_handler;
+}
+
+void handle_reserved() {
+    printf("unknown int\n");
+    while(1);
 }
 
 /*

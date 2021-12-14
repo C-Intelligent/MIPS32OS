@@ -1,6 +1,7 @@
 #pragma once
 #include "types.h"
 #include "../drivers/ff.h"
+#include "file.h"
 
 // exec.c
 int             exec(char*, int, char**);
@@ -12,14 +13,18 @@ struct file*    get_std_in_f();
 struct file*    filealloc(void);
 void            fileclose(struct file*);
 struct file*    filedup(struct file*);
-// void            fileinit(void);
-// int             filestat(struct file*, struct _m_stat*);
+FNODE * fnodealloc(void);
+int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
 int             fileread(struct file*, char*, int n);
+
+void print_startimg();
 
 int chdir(const char *path);
 void pwd();
 void ls();
+
+FNODE * namef(const char* path);
 
 // kalloc.c
 char*           kalloc(void);
@@ -49,9 +54,11 @@ void sleep(struct proc *p);
 void            userinit(void);
 int             wait(void);
 void wakeup(struct proc *p);
+void wakeup_on_train(void *chan);
+void sleep_on_train(void *chan);
 
 // swtch.S
-void            swtch(struct trapframe* save_to, struct trapframe * to_load);
+void            swtchk2u(struct trapframe* save_to, struct trapframe * to_load, u_int);
 
 // spinlock.c
 void            acquire(struct spinlock*);
@@ -77,9 +84,7 @@ extern struct spinlock tickslock;
 // vm.c
 u_int           searchPN(void* addr);
 void allocate8KB(u_int *bada, u_int *arr, u_int epc);
-// void            seginit(void);
 void            init_kpg_table(void); //为核心创建页表
-// void            vmenable(void);
 pde_t*          setupkpg_t(void);  //创建页表
 char*           uva2ka(pde_t*, char*);
 

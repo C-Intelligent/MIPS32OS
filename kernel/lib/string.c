@@ -72,3 +72,26 @@ safebytecpy(u_int addr, const char b)
   byte = byte << (8 * addr2);
   *(u_int*)addr1 = v | byte;
 }
+
+int
+strcmp(const char *p, const char *q)
+{
+  int ret = 0;
+	while(!(ret=*(unsigned char*)p - *(unsigned char*)q) && *p)
+		p++, q++;
+
+	if (ret < 0)
+		return -1;
+	else if (ret > 0)
+		return 1;
+	return 0;
+}
+
+char*
+strchr(const char *s, char c)
+{
+  for(; *s; s++)
+    if(*s == c)
+      return (char*)s;
+  return 0;
+}

@@ -15,3 +15,6 @@ void disable_timer0();
 
 void set_timing_interval_s(u32 s);
 void set_timing_interval_ms(u32 ms);
+
+//时间片大小
+#define ROUNDTICKS 20

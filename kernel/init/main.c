@@ -69,12 +69,11 @@ main(void) {
 
   //###############################
 
+  print_startimg();
 
   // idtinit();       // load idt register
   // xchg(&cpu->started, 1); // tell startothers() we're up
   scheduler();     // start running processes.;;
-
-  printf("finish init\n");
 
   while (1);
 }

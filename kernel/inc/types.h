@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "../drivers/ff.h"
 
 #ifndef NULL
 #define NULL ((void*) 0)
@@ -139,10 +140,6 @@ struct proc {
   char name[32];               // Process name (debugging)
 };
 
-struct _m_stat {
-	int v;
-};
-
 struct superblock {
 	int v;
 };
@@ -157,10 +154,25 @@ struct superblock {
 struct pipe {
   struct spinlock lock;
   char data[PIPESIZE];
-  struct proc *fa;  //father
-  struct proc *chi; //child
+  struct proc *pw;  
+  struct proc *pr; 
   u_int nread;     // number of bytes read
   u_int nwrite;    // number of bytes written
   int readopen;   // read fd is still open
   int writeopen;  // write fd is still open
+};
+
+#define READ             0x01
+#define OPEN_EXISTING    0x00
+#define WRITE            0x02
+#define CREATE_NEW       0x04
+#define CREATE_ALWAYS    0x08
+#define OPEN_ALWAYS      0x10
+
+
+
+//文件信息
+struct stat {
+  int type;
+  FILINFO info;
 };

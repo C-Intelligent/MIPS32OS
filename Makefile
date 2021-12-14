@@ -32,7 +32,7 @@ LIBS := 	$(user_dir)/*.o	 		  \
 			# $(proc_dir)/*.o \
 			
 
-APPS := console bash help
+APPS := console bash help demo ls echo cat grep ptest ln rm mkdir sitop
 			
 
 
@@ -59,9 +59,10 @@ FPGA_RAM : $(modules)
 APPFLAGS = -EL -nostartfiles -N -T user.lds -O0 -G0
 $(APPS):
 	$(LD) $(APPFLAGS) $(LIBS) apps/$@.o -o apps/$@
-	$(SZ) apps/$@
-	$(OD) -D -S -l apps/$@ > apps/$@_dasm.txt
-	$(OD) -D -z apps/$@ > apps/$@_modelsim.txt
+	
+# $(SZ) apps/$@
+# $(OD) -D -S -l apps/$@ > apps/$@_dasm.txt
+# $(OD) -D -z apps/$@ > apps/$@_modelsim.txt
 
 $(modules): 
 	$(MAKE) --directory=$@

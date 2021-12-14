@@ -14,6 +14,14 @@ int pwd(char* cwd, int len);
 int chdir(const char* path);
 int pipe(int*);
 int close(int fd);
+int open(char*, int);
+int fstat(int fd, struct stat*);
+int dup(int);  //将新fd定向到（最小未使用的fd）
+int unlink(char*);
+int link(char*, char*);
+int mkdir(char*);
+int sleep(int t);
+int disprocs();
 char* sbrk(int);  //向上增长堆区
 
 

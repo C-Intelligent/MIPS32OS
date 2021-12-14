@@ -199,14 +199,7 @@ void allocate8KB(u_int *bada, u_int *arr, u_int epc) {
   }
   pa = pa & 0xfffff000;
   arr[1] = pa - 0x80000000; 
-  printf("bada: %x  epc: %x pa0 %x   pa1  %x\n", bada, epc, arr[0], arr[1]);
-  /*
-  printf("entryHi: %x  pa0 %x   pa1%x\n", entryHi, arr[0], arr[1]);
-  u_int* add = (u_int*)((u_int)arr[0] + 0x80000000);
-  for (;add < ((u_int)arr[0] + 0x80000000 + 40);add++) {
-    printf("%x  %x\n", add, *add);
-  }
-  */
+  // printf("bada: %x  epc: %x pa0 %x   pa1  %x\n", bada, epc, arr[0], arr[1]);
 }
 
 
@@ -257,7 +250,7 @@ loaduvm(pde_t *pgdir, char *addr, FIL *fp, u_int offset, u_int sz)
     if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
       panic("loaduvm: address should exist");
     pa = PTE_ADDR(*pte); //物理页框首地址
-    printf("[loaduvm] va: %x pa: => %x\n", addr+i , pa);
+    //printf("[loaduvm] va: %x pa: => %x\n", addr+i , pa);
     if(sz - i < PGSIZE)
       n = sz - i;
     else
@@ -294,7 +287,7 @@ allocuvm(pde_t *pgdir, u_int oldsz, u_int newsz)
       return 0;
     }
     // memset(mem, 0, PGSIZE);
-    printf("[allocuvm]  va: %x => pa: %x\n", a, mem);
+    // printf("[allocuvm]  va: %x => pa: %x\n", a, mem);
     mappages(pgdir, (void*)a, PGSIZE, (u_int)mem, PTE_W|PTE_U);
   }
   return newsz;

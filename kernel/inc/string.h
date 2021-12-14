@@ -3,6 +3,8 @@
 #include "types.h"
 
 int     strlen(const char *s);
+int strcmp(const char *p, const char *q);
+char * strchr(const char *s, char c);
 
 // int	    strnlen(const char *s, size_t size);
 // char *	strcpy(char *dst, const char *src);
