@@ -28,6 +28,7 @@ u_int
 sys_sbrk(int n)
 {
   u_int addr = curproc->sz;
+  
   if(growproc(n) < 0)
     return -1;
   return addr;

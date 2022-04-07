@@ -15,6 +15,7 @@ void locktest();
 
 int 
 main(void) {
+  cons_init();
   printf("\nHello Operating System!\n");
 
   //locktest();

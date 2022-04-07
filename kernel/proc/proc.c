@@ -450,9 +450,13 @@ wakeup_on_train(void *chan) {
 int
 growproc(int n)
 {
+  // printf("growproc  ustack_bottom: %x\n", curproc->ustack_bottom);
+  // printf("sz: %x\n", curproc->sz);
   u_int sz;
   
   sz = curproc->sz;
+
+  if (sz + n >= curproc->ustack_bottom) return -1;
 
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
@@ -462,6 +466,7 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
+  //printf("growproc end\n");
   return 0;
 }
 

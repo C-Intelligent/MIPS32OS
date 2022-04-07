@@ -23,10 +23,12 @@ const char whitespace[] = " \t\r\n\v";
 const char symbols[] = "<|>&;()";
 
 int main(int argc, char* argv) {
-    char *str = (char*)malloc(20);
-    safestrcpy(str, "#== bash start ==#\n", 20);
+    // printf("#=======================#\n");
+    char *str = (char*)malloc(40);
+    safestrcpy(str, "#==    bash   start    ==#\n", 40);
     printf("%s\n", str);
     start_bash();
+    while(1);
     return 0;
 }
 
@@ -41,6 +43,7 @@ getcmd(char *buf, int nbuf) {
     printf("%s:%s# ", name, cwd);
     memset(buf, 0, nbuf);
     cmdgets(buf, nbuf);
+    // printf("cmd:%s\n", buf);
     if(buf[0] == 0) // EOF
       return -1;
     return 0;
@@ -196,8 +199,10 @@ parseredirs(struct cmd *cmd, char **ps, char *es)
     tok = gettoken(ps, es, 0, 0);
     
     //获取重定向文件（q -> eq）
-    if(gettoken(ps, es, &q, &eq) != 'a')
+    if(gettoken(ps, es, &q, &eq) != 'a') {
       panic("missing file for redirection");
+      exit();
+    }
     switch(tok){
     case '<':
       cmd = redircmd(cmd, q, eq, READ, STDIN);  //重定向输入
@@ -219,12 +224,18 @@ parseblock(char **ps, char *es)
 {
   struct cmd *cmd;
 
-  if(!peek(ps, es, "("))
-    panic("parseblock");
+  if(!peek(ps, es, "(")) {
+    panic("parseblock err");
+    exit();
+  }
+    
   gettoken(ps, es, 0, 0);
   cmd = parseline(ps, es);
-  if(!peek(ps, es, ")"))
+  if(!peek(ps, es, ")")) {
     panic("syntax - missing )");
+    exit();
+  }
+    
   gettoken(ps, es, 0, 0);
   cmd = parseredirs(cmd, ps, es);
   return cmd;
@@ -256,15 +267,21 @@ parseexec(char **ps, char *es) {
     //无参数 退出
     if((tok=gettoken(ps, es, &q, &eq)) == 0)
         break;
-    if(tok != 'a')
-        panic("syntax");
+    if(tok != 'a') {
+      panic("syntax");
+      exit();
+    }
+        
     
     // printf("parse  q: %x eq: %x argv: %s\n", q, eq, q);
     cmd->argv[argc] = q;
     cmd->eargv[argc] = eq;
     argc++;
-    if(argc >= MAXARGS)
-        panic("too many args");
+    if(argc >= MAXARGS) {
+      panic("too many args");
+      exit();
+    }
+        
     ret = parseredirs(ret, ps, es);
   }
   cmd->argc = argc;
@@ -327,6 +344,7 @@ parsecmd(char *s)
   if(s != es){
     printf("leftovers: %s\n", s);
     panic("syntax");
+    exit();
   }
   //获取参数
   nulterminate(cmd);
@@ -414,7 +432,8 @@ runcmd(struct cmd *cmd)
     // for (; i < ecmd->argc; i++) printf("[runcmd-argv] %s\n", ecmd->argv[i]);
     if(ecmd->argv[0] == 0)
       exit();
-    exec(ecmd->argv[0], ecmd->argc, ecmd->argv);
+    if (exec(ecmd->argv[0], ecmd->argc, ecmd->argv) < 0)
+      printf("There is no cmd '%s'.\nInput 'help' for more infomation.\n", ecmd->argv[0]);
 
     // printf("exec %s failed\n", ecmd->argv[0]);
     break;
@@ -469,6 +488,8 @@ runcmd(struct cmd *cmd)
     bcmd = (struct backcmd*)cmd;
     if(fork() == 0)
       runcmd(bcmd->cmd);
+    //本不应加上
+    wait();
     break;
   }
   exit();
@@ -502,7 +523,7 @@ void start_bash() {
               runcmd(parsecmd(buf));
           wait();
       }
-      printf("fail to get cmd\n");
+      printf("fail to get cmd\nInput 'help' for more infomation.\n");
     }
     while (1);
 }

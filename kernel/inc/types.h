@@ -129,6 +129,8 @@ struct proc {
   struct trapframe *tf;        // Trap frame for current syscall
   struct trapframe *context;     // 用于调度
 
+  u_int ustack_bottom; //栈底
+
   //是否应该放在这个位置还待定
   u_int cr3;
 

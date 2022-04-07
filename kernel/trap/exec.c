@@ -15,7 +15,7 @@ int
 exec(char *path, int argc, char **argv)
 {
     // printf("exec! path add: %x  argc:%x   argv:%x \n", path, argc, argv);
-    // printf("exec : %s\n", path);
+    //printf("exec : %s\n", path);
     char *s, *last;
 
     u_int sz, sp;
@@ -47,10 +47,10 @@ exec(char *path, int argc, char **argv)
         //printf("res state:%d\n", res);
         safestrcpy(fpath, "0:/bin/", 8);
         safestrcpy(&fpath[7], path, sizeof(fpath) - 8);
-        // printf("file: %s\n", fpath);
+        //printf("file: %s\n", fpath);
         res = f_open(fp, fpath, FA_READ);
         if (FR_OK != res) {
-            printf("cannot find file: %s\n", fpath);
+            // printf("cannot find file: %s\n", fpath);
             goto bad;
         }
     }
@@ -132,10 +132,19 @@ exec(char *path, int argc, char **argv)
     if (sz % (2*PGSIZE)) sz += PGSIZE;
 
     //再分配两页 一页作为隔离(无法访问) 一页做栈
+    /*
     if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
         goto bad;
     clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
-    sp = sz;  //用户栈顶
+    */
+    //空隔两页 以防出错
+    u_int stacktop = 0x80000000 - 2*PGSIZE;
+    if(allocuvm(pgdir, stacktop - 2*PGSIZE, stacktop) == 0)
+        goto bad;
+    //sp = sz;  //用户栈顶
+    sp = stacktop;
+
+    //printf("sp:%x\n", sp);
 
     // Push argument strings, prepare rest of stack in ustack.
     int argc__;
@@ -185,6 +194,7 @@ exec(char *path, int argc, char **argv)
     curproc->sz = sz;
 
     curproc->tf->regs[29] = sp; //sp
+    curproc->ustack_bottom = stacktop - 2*PGSIZE;
 
     curproc->tf->cp0_status = 0x00007c00;
 

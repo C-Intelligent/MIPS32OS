@@ -205,6 +205,9 @@ LEAF(_start)
 	li		k0, 0x00007c00
 	mtc0	k0,CP0_STATUS
 
+	jal cons_init
+	nop
+
 	jal	main
 	nop
 

@@ -147,6 +147,7 @@ fileread(struct file *f, char *addr, int n)
     if (f->fp->type == T_FIL) {
       //暂未考虑读写锁安全问题  后续要加上  lock, unlock
       //暂未考虑多个进程同时读文件的问题
+      // printf("read file\n");
 
       uint32_t br;
 

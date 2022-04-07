@@ -59,6 +59,7 @@ FPGA_RAM : $(modules)
 APPFLAGS = -EL -nostartfiles -N -T user.lds -O0 -G0
 $(APPS):
 	$(LD) $(APPFLAGS) $(LIBS) apps/$@.o -o apps/$@
+	$(OD) -D -S -l apps/$@ > apps/$@_dasm.txt
 	
 # $(SZ) apps/$@
 # $(OD) -D -S -l apps/$@ > apps/$@_dasm.txt
